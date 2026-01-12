@@ -9,35 +9,24 @@
 <body>
     <header>
         <nav>
-            <a href="#tienda" class="logo">
-                <svg class="logo-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                    <g class="geometric-frame" opacity="0.3">
-                        <polygon points="50,10 73,33 73,67 50,90 27,67 27,33" fill="none" stroke="#8a2be2" stroke-width="1.5"/>
-                        <polygon points="50,17 67,33 67,67 50,83 33,67 33,33" fill="none" stroke="#6a1bb2" stroke-width="1.5"/>
-                    </g>
-                    <circle cx="50" cy="50" r="23" fill="#1a1a1a" stroke="#8a2be2" stroke-width="2"/>
-                    <g transform="translate(50, 50)">
-                        <path d="M -8,-3 L 0,-10 L 8,-3 Z" fill="#ffffff"/>
-                        <rect x="-8" y="-3" width="16" height="13" fill="#8a2be2"/>
-                        <rect x="-3" y="3" width="6" height="7" fill="#ffffff"/>
-                        <circle cx="0" cy="2" r="4" fill="none" stroke="#ffffff" stroke-width="1.5"/>
-                        <line x1="-2" y1="0" x2="-3" y2="-2" stroke="#ffffff" stroke-width="1"/>
-                        <line x1="2" y1="0" x2="3" y2="-2" stroke="#ffffff" stroke-width="1"/>
-                        <circle cx="-3" cy="-2" r="1" fill="#ffffff"/>
-                        <circle cx="3" cy="-2" r="1" fill="#ffffff"/>
-                        <circle cx="5" cy="5" r="3" fill="none" stroke="#ffffff" stroke-width="1.5"/>
-                        <line x1="7" y1="7" x2="9" y2="9" stroke="#ffffff" stroke-width="1.5"/>
-                        <text x="4" y="7" font-size="4" fill="#8a2be2" font-weight="bold">A</text>
-                    </g>
-                    <circle cx="67" cy="33" r="1" fill="#8a2be2" class="pulse"/>
-                    <circle cx="33" cy="60" r="1" fill="#00d4ff" class="pulse"/>
-                </svg>
-                <span>Los Pendejos</span>
-            </a>
-            <div class="menu-toggle" onclick="toggleMenu()">
-                <span></span>
-                <span></span>
-                <span></span>
+            <div class="nav-left">
+                <div class="menu-toggle" onclick="openCategorias(event)">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <a href="#tienda" class="logo">
+                    <svg class="logo-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <g class="geometric-frame" opacity="0.3">
+                            <polygon points="50,10 73,33 73,67 50,90 27,67 27,33" fill="none" stroke="#8a2be2" stroke-width="1.5"/>
+                            <polygon points="50,17 67,33 67,67 50,83 33,67 33,33" fill="none" stroke="#6a1bb2" stroke-width="1.5"/>
+                        </g>
+                        <circle cx="50" cy="50" r="23" fill="#1a1a1a" stroke="#8a2be2" stroke-width="2"/>
+                        <circle cx="67" cy="33" r="1" fill="#8a2be2" class="pulse"/>
+                        <circle cx="33" cy="60" r="1" fill="#00d4ff" class="pulse"/>
+                    </svg>
+                    <span>Los Pendejos</span>
+                </a>
             </div>
             <ul class="nav-links" id="navLinks">
                 <li><a href="#tienda">Tienda</a></li>
@@ -46,6 +35,96 @@
             </ul>
         </nav>
     </header>
+
+    <!-- Overlay y Sidebar de Categorías -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeCategorias()"></div>
+    
+    <div class="categorias-sidebar" id="categoriasSidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-header-top">
+                <div class="sidebar-title">Categorías</div>
+                <button class="sidebar-close" onclick="closeCategorias()">✕</button>
+            </div>
+            <input type="text" class="sidebar-search" id="sidebarSearch" placeholder="🔍 Buscar categoría..." oninput="filterCategorias()">
+        </div>
+        
+        <div class="categorias-container">
+            <div class="categoria-item">
+                <div class="categoria-header" onclick="toggleCategoria(this)">
+                    <div class="categoria-titulo">
+                        <span class="categoria-icon">⚡</span>
+                        <span>Electrónicos</span>
+                    </div>
+                    <span class="categoria-flecha">▼</span>
+                </div>
+                <div class="categoria-contenido">
+                    <div class="categoria-productos">
+                        <a href="#productos" class="categoria-link" onclick="filterByCategory('electronicos'); return false;">Ver todos los Electrónicos</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="categoria-item">
+                <div class="categoria-header" onclick="toggleCategoria(this)">
+                    <div class="categoria-titulo">
+                        <span class="categoria-icon">🏠</span>
+                        <span>Muebles</span>
+                    </div>
+                    <span class="categoria-flecha">▼</span>
+                </div>
+                <div class="categoria-contenido">
+                    <div class="categoria-productos">
+                        <a href="#productos" class="categoria-link" onclick="filterByCategory('muebles'); return false;">Ver todos los Muebles</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="categoria-item">
+                <div class="categoria-header" onclick="toggleCategoria(this)">
+                    <div class="categoria-titulo">
+                        <span class="categoria-icon">👔</span>
+                        <span>Accesorios</span>
+                    </div>
+                    <span class="categoria-flecha">▼</span>
+                </div>
+                <div class="categoria-contenido">
+                    <div class="categoria-productos">
+                        <a href="#productos" class="categoria-link" onclick="filterByCategory('accesorios'); return false;">Ver todos los Accesorios</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="categoria-item">
+                <div class="categoria-header" onclick="toggleCategoria(this)">
+                    <div class="categoria-titulo">
+                        <span class="categoria-icon">🛍️</span>
+                        <span>Suministros</span>
+                    </div>
+                    <span class="categoria-flecha">▼</span>
+                </div>
+                <div class="categoria-contenido">
+                    <div class="categoria-productos">
+                        <a href="#productos" class="categoria-link" onclick="filterByCategory('suministros'); return false;">Ver todos los Suministros</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="categoria-item">
+                <div class="categoria-header" onclick="toggleCategoria(this)">
+                    <div class="categoria-titulo">
+                        <span class="categoria-icon">🔄</span>
+                        <span>Todos los Productos</span>
+                    </div>
+                    <span class="categoria-flecha">▼</span>
+                </div>
+                <div class="categoria-contenido">
+                    <div class="categoria-productos">
+                        <a href="#productos" class="categoria-link" onclick="filterByCategory(''); return false;">Mostrar Todo</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <svg class="watermark" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
         <g class="geometric-frame">
@@ -63,13 +142,6 @@
     </section>
 
     <section class="productos" id="productos">
-        <h2>Nuestros Productos</h2>
-        
-        <div style="text-align: center;">
-            <p id="status-message">⏳ Cargando productos...</p>
-            <input id="search" type="text" placeholder="🔍 Buscar productos..." />
-        </div>
-
         <div class="productos-grid" id="productos-grid">
             <!-- Los productos se cargarán automáticamente -->
         </div>
