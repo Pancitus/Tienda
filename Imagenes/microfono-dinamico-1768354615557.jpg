@@ -1,0 +1,16 @@
+=
+```
+
+---
+
+## 📋 **Configuración Completa del Nodo "Create a file"**
+```
+Resource: File
+Operation: Create
+Repository Owner: By URL → https://github.com/Pancitus/Tienda.git
+Repository Name: From list → Tienda
+File Path: =Imagenes/microfono-dinamico-1768354615557.jpg
+File Content: =
+Commit Message: =Micrófono dinámico
+Options:
+  Branch: main
