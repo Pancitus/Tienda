@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tienda KJ - Calidad y los mejores precios</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="nav-left">
+                <div class="menu-toggle" onclick="openCategorias(event)">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <a href="#tienda" class="logo">
+                    <svg class="logo-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <g class="geometric-frame" opacity="0.3">
+                            <polygon points="50,10 73,33 73,67 50,90 27,67 27,33" fill="none" stroke="#8a2be2" stroke-width="1.5"/>
+                            <polygon points="50,17 67,33 67,67 50,83 33,67 33,33" fill="none" stroke="#6a1bb2" stroke-width="1.5"/>
+                        </g>
+                        <circle cx="50" cy="50" r="23" fill="#1a1a1a" stroke="#8a2be2" stroke-width="2"/>
+                        <circle cx="67" cy="33" r="1" fill="#8a2be2" class="pulse"/>
+                        <circle cx="33" cy="60" r="1" fill="#00d4ff" class="pulse"/>
+                    </svg>
+                    <span>Tienda KJ</span>
+                </a>
+            </div>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#tienda">Tienda</a></li>
+                <li><a href="#productos">Productos</a></li>
+                <li><a href="#contacto">Contáctanos</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Overlay y Sidebar de Categorías -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeCategorias()"></div>
+    
+    <div class="categorias-sidebar" id="categoriasSidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-header-top">
+                <div class="sidebar-title">Categorías</div>
+                <button class="sidebar-close" onclick="closeCategorias()">✕</button>
+            </div>
+            <input type="text" class="sidebar-search" id="sidebarSearch" placeholder="🔍 Buscar categoría..." oninput="filterCategorias()">
+        </div>
+        
+        <div class="categorias-container">
+            <div class="categoria-item">
+                <div class="categoria-header" onclick="toggleCategoria(this)">
+                    <div class="categoria-titulo">
+                        <span class="categoria-icon">⚡</span>
+                        <span>Electrónicos</span>
+                    </div>
+                    <span class="categoria-flecha">▼</span>
+                </div>
+                <div class="categoria-contenido">
+                    <div class="categoria-productos">
+                        <a href="#productos" class="categoria-link" onclick="filterByCategory('electronicos'); return false;">Ver todos los Electrónicos</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="categoria-item">
+                <div class="categoria-header" onclick="toggleCategoria(this)">
+                    <div class="categoria-titulo">
+                        <span class="categoria-icon">🏠</span>
+                        <span>Muebles</span>
+                    </div>
+                    <span class="categoria-flecha">▼</span>
+                </div>
+                <div class="categoria-contenido">
+                    <div class="categoria-productos">
+                        <a href="#productos" class="categoria-link" onclick="filterByCategory('muebles'); return false;">Ver todos los Muebles</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="categoria-item">
+                <div class="categoria-header" onclick="toggleCategoria(this)">
+                    <div class="categoria-titulo">
+                        <span class="categoria-icon">👔</span>
+                        <span>Accesorios</span>
+                    </div>
+                    <span class="categoria-flecha">▼</span>
+                </div>
+                <div class="categoria-contenido">
+                    <div class="categoria-productos">
+                        <a href="#productos" class="categoria-link" onclick="filterByCategory('accesorios'); return false;">Ver todos los Accesorios</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="categoria-item">
+                <div class="categoria-header" onclick="toggleCategoria(this)">
+                    <div class="categoria-titulo">
+                        <span class="categoria-icon">🛍️</span>
+                        <span>Suministros</span>
+                    </div>
+                    <span class="categoria-flecha">▼</span>
+                </div>
+                <div class="categoria-contenido">
+                    <div class="categoria-productos">
+                        <a href="#productos" class="categoria-link" onclick="filterByCategory('suministros'); return false;">Ver todos los Suministros</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="categoria-item">
+                <div class="categoria-header" onclick="toggleCategoria(this)">
+                    <div class="categoria-titulo">
+                        <span class="categoria-icon">🔄</span>
+                        <span>Todos los Productos</span>
+                    </div>
+                    <span class="categoria-flecha">▼</span>
+                </div>
+                <div class="categoria-contenido">
+                    <div class="categoria-productos">
+                        <a href="#productos" class="categoria-link" onclick="filterByCategory(''); return false;">Mostrar Todo</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <svg class="watermark" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+        <g class="geometric-frame">
+            <polygon points="150,30 220,100 220,200 150,270 80,200 80,100" fill="none" stroke="#8a2be2" stroke-width="2"/>
+            <polygon points="150,50 200,100 200,200 150,250 100,200 100,100" fill="none" stroke="#6a1bb2" stroke-width="2"/>
+        </g>
+        <circle cx="150" cy="150" r="70" fill="#1a1a1a" stroke="#8a2be2" stroke-width="3"/>
+        <circle cx="200" cy="100" r="3" fill="#8a2be2" class="pulse"/>
+        <circle cx="100" cy="180" r="3" fill="#00d4ff" class="pulse"/>
+    </svg>
+
+    <section class="hero" id="tienda">
+        <h1>Bienvenido a Tienda KJ</h1>
+        <p>Calidad, estilo y los mejores precios en un solo lugar</p>
+    </section>
+
+    <section class="productos" id="productos">
+        <div class="productos-grid" id="productos-grid">
+            <!-- Los productos se cargarán automáticamente -->
+        </div>
+    </section>
+
+    <section class="contacto" id="contacto">
+        <h2>¿Necesitas más información?</h2>
+        <p>Nuestro chatbot está disponible para ayudarte con cualquier consulta</p>
+        <a href="https://wa.me/593963426407?text=Hola,%20necesito%20información%20sobre%20sus%20productos" class="contacto-btn" target="_blank">Contactar por WhatsApp</a>
+    </section>
+
+    <section class="redes-sociales">
+        <h2>Síguenos en Redes Sociales</h2>
+        <div class="social-buttons">
+            <a href="https://instagram.com/tu_usuario" class="social-btn instagram" target="_blank">
+                <span class="social-icon">📷</span>
+                <span>Instagram</span>
+            </a>
+            <a href="https://facebook.com/tu_pagina" class="social-btn facebook" target="_blank">
+                <span class="social-icon">📘</span>
+                <span>Facebook</span>
+            </a>
+            <a href="https://tiktok.com/@tu_usuario" class="social-btn tiktok" target="_blank">
+                <span class="social-icon">🎵</span>
+                <span>TikTok</span>
+            </a>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 Tienda KJ. Todos los derechos reservados.</p>
+    </footer>
+
+    <a href="https://wa.me/593963426407?text=Hola,%20necesito%20información" class="whatsapp-btn" target="_blank" title="Chatea con nosotros">💬</a>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
