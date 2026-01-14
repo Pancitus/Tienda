@@ -28,7 +28,6 @@ body {
     overflow-x: hidden;
 }
 
-/* Marca de agua */
 .watermark {
     position: fixed;
     top: 50%;
@@ -41,7 +40,6 @@ body {
     z-index: 0;
 }
 
-/* Header */
 header {
     background: linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(42, 42, 42, 0.95) 100%);
     backdrop-filter: blur(10px);
@@ -134,7 +132,6 @@ nav {
     box-shadow: 0 0 15px rgba(0, 212, 255, 0.7);
 }
 
-/* Sidebar de categorías */
 .categorias-sidebar {
     position: fixed;
     top: 0;
@@ -317,7 +314,6 @@ nav {
     padding-left: 2rem;
 }
 
-/* Hero */
 .hero {
     text-align: center;
     padding: 8rem 2rem 6rem;
@@ -385,14 +381,26 @@ nav {
     }
 }
 
-/* Secciones */
 section {
-    padding: 4rem 2rem;
+    padding: 3rem 2rem;
     max-width: 1200px;
     margin: 0 auto;
     position: relative;
     z-index: 1;
     animation: fadeIn 0.8s ease-out;
+}
+
+section.productos {
+    padding: 4rem 2rem;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 section h2 {
@@ -401,9 +409,7 @@ section h2 {
     margin-bottom: 3rem;
     color: var(--color-primary);
     position: relative;
-    display: inline-block;
-    left: 50%;
-    transform: translateX(-50%);
+    display: block;
 }
 
 section h2::after {
@@ -412,12 +418,11 @@ section h2::after {
     bottom: -10px;
     left: 50%;
     transform: translateX(-50%);
-    width: 60%;
+    width: 150px;
     height: 3px;
     background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
 }
 
-/* Grid de productos */
 .productos-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -434,17 +439,6 @@ section h2::after {
     position: relative;
     border: 1px solid transparent;
     animation: fadeIn 0.5s ease-out both;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: scale(0.9);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
 }
 
 .producto-card::before {
@@ -514,7 +508,6 @@ section h2::after {
     margin-top: 0.5rem;
 }
 
-/* Modal de Producto */
 .product-modal-overlay {
     position: fixed;
     top: 0;
@@ -697,27 +690,6 @@ section h2::after {
     box-shadow: 0 6px 25px rgba(37, 211, 102, 0.6);
 }
 
-/* Responsive Modal */
-@media (max-width: 768px) {
-    .modal-content {
-        grid-template-columns: 1fr;
-        padding: 1.5rem;
-    }
-
-    .modal-title {
-        font-size: 1.5rem;
-    }
-
-    .modal-price {
-        font-size: 2rem;
-    }
-
-    .product-modal {
-        margin: 1rem;
-    }
-}
-
-/* Contacto */
 .contacto {
     text-align: center;
     background: linear-gradient(135deg, rgba(26, 26, 26, 0.8) 0%, rgba(42, 42, 42, 0.8) 50%, rgba(26, 26, 26, 0.8) 100%);
@@ -725,6 +697,17 @@ section h2::after {
     padding: 3rem;
     border: 1px solid rgba(138, 43, 226, 0.2);
     box-shadow: 0 8px 32px rgba(138, 43, 226, 0.2);
+    margin: 4rem auto;
+    max-width: 800px;
+}
+
+.contacto h2 {
+    margin-bottom: 1.5rem;
+}
+
+.contacto p {
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
 }
 
 .contacto-btn {
@@ -744,9 +727,14 @@ section h2::after {
     box-shadow: 0 5px 20px rgba(37, 211, 102, 0.5);
 }
 
-/* Redes sociales */
 .redes-sociales {
     text-align: center;
+    margin: 4rem auto;
+    max-width: 900px;
+}
+
+.redes-sociales h2 {
+    margin-bottom: 2.5rem;
 }
 
 .social-buttons {
@@ -788,7 +776,6 @@ section h2::after {
     font-size: 1.5rem;
 }
 
-/* Footer */
 footer {
     text-align: center;
     padding: 2rem;
@@ -798,7 +785,6 @@ footer {
     border-top: 1px solid rgba(138, 43, 226, 0.2);
 }
 
-/* WhatsApp flotante */
 .whatsapp-btn {
     position: fixed;
     bottom: 30px;
@@ -832,35 +818,6 @@ footer {
     box-shadow: 0 6px 30px rgba(37, 211, 102, 0.8);
 }
 
-/* Status */
-#status-message {
-    color: var(--color-primary);
-    font-size: 1.1rem;
-    margin-bottom: 2rem;
-}
-
-#search {
-    width: 100%;
-    max-width: 500px;
-    padding: 1rem;
-    border: 2px solid rgba(138, 43, 226, 0.5);
-    border-radius: 50px;
-    background: linear-gradient(135deg, var(--color-card) 0%, var(--color-gray-dark) 100%);
-    color: white;
-    font-size: 1rem;
-    margin: 0 auto 2rem;
-    display: block;
-    outline: none;
-    transition: all 0.3s;
-}
-
-#search:focus {
-    box-shadow: 0 0 20px rgba(138, 43, 226, 0.6);
-    border-color: var(--color-primary);
-    background: linear-gradient(135deg, var(--color-gray-dark) 0%, var(--color-gray-medium) 100%);
-}
-
-/* Scrollbar personalizada */
 ::-webkit-scrollbar {
     width: 10px;
 }
@@ -878,7 +835,6 @@ footer {
     background: linear-gradient(180deg, var(--color-accent), var(--color-primary));
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     nav {
         flex-direction: row;
@@ -943,5 +899,22 @@ footer {
 
     .menu-toggle.active span:nth-child(3) {
         transform: rotate(-45deg) translate(7px, -6px);
+    }
+
+    .modal-content {
+        grid-template-columns: 1fr;
+        padding: 1.5rem;
+    }
+
+    .modal-title {
+        font-size: 1.5rem;
+    }
+
+    .modal-price {
+        font-size: 2rem;
+    }
+
+    .product-modal {
+        margin: 1rem;
     }
 }
