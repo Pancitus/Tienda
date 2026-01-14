@@ -1,0 +1,16 @@
+=
+```
+
+---
+
+## 📋 **Configuración Completa del Nodo "Create a file"**
+```
+Resource: File
+Operation: Create
+Repository Owner: By URL → https://github.com/Pancitus/Tienda.git
+Repository Name: From list → Tienda
+File Path: =Imagenes/gato-chino-1768354124869.jpg
+File Content: =
+Commit Message: =Gato chino
+Options:
+  Branch: main
