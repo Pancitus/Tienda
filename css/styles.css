@@ -43,7 +43,7 @@ body {
 header {
     background: linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(42, 42, 42, 0.95) 100%);
     backdrop-filter: blur(10px);
-    padding: 1rem 2rem;
+    padding: 1rem;
     position: sticky;
     top: 0;
     z-index: 100;
@@ -62,7 +62,7 @@ nav {
 .nav-left {
     display: flex;
     align-items: center;
-    gap: 2rem;
+    gap: 1.5rem;
 }
 
 .logo {
@@ -316,7 +316,7 @@ nav {
 
 .hero {
     text-align: center;
-    padding: 8rem 2rem 6rem;
+    padding: 6rem 2rem 4rem;
     background: linear-gradient(135deg, rgba(138, 43, 226, 0.15), rgba(0, 212, 255, 0.1));
     position: relative;
     z-index: 1;
@@ -340,7 +340,7 @@ nav {
 }
 
 .hero h1 {
-    font-size: 3.5rem;
+    font-size: 3rem;
     margin-bottom: 1.5rem;
     background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
     -webkit-background-clip: text;
@@ -363,7 +363,7 @@ nav {
 }
 
 .hero p {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
     color: #ccc;
     position: relative;
     z-index: 2;
@@ -835,86 +835,156 @@ footer {
     background: linear-gradient(180deg, var(--color-accent), var(--color-primary));
 }
 
+/* MOBILE RESPONSIVE */
 @media (max-width: 768px) {
-    nav {
-        flex-direction: row;
-    }
-
-    .nav-links {
+    .nav-left {
         gap: 1rem;
     }
-
-    .hero h1 {
-        font-size: 2rem;
-    }
-
-    .productos-grid {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: 1rem;
-    }
-
-    .social-buttons {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .categorias-sidebar {
-        width: 100%;
-        left: -100%;
-    }
-
-    .categorias-sidebar.active {
-        left: 0;
-    }
-
-    .categoria-header {
-        padding: 1.2rem;
-    }
-
-    .categoria-titulo {
-        font-size: 1.1rem;
-    }
-
+    
     .logo {
         font-size: 1.2rem;
     }
-
+    
     .logo-icon {
         width: 40px;
         height: 40px;
     }
-
+    
     .nav-links {
         gap: 1rem;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
     }
-
-    .menu-toggle.active span:nth-child(1) {
-        transform: rotate(45deg) translate(5px, 5px);
+    
+    .hero h1 {
+        font-size: 2rem;
     }
-
-    .menu-toggle.active span:nth-child(2) {
-        opacity: 0;
+    
+    .hero p {
+        font-size: 1rem;
     }
-
-    .menu-toggle.active span:nth-child(3) {
-        transform: rotate(-45deg) translate(7px, -6px);
+    
+    .hero {
+        padding: 4rem 1rem 3rem;
     }
-
+    
+    section {
+        padding: 2rem 1rem;
+    }
+    
+    section h2 {
+        font-size: 1.8rem;
+    }
+    
+    .productos-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .producto-card img {
+        height: 150px;
+    }
+    
+    .producto-info {
+        padding: 1rem;
+    }
+    
+    .producto-nombre {
+        font-size: 1rem;
+    }
+    
+    .producto-precio {
+        font-size: 1.2rem;
+    }
+    
+    .categorias-sidebar {
+        width: 85%;
+        left: -85%;
+    }
+    
     .modal-content {
         grid-template-columns: 1fr;
         padding: 1.5rem;
     }
-
+    
     .modal-title {
         font-size: 1.5rem;
     }
-
+    
     .modal-price {
         font-size: 2rem;
     }
+    
+    .social-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .contacto {
+        padding: 2rem 1.5rem;
+    }
+    
+    .whatsapp-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+        bottom: 20px;
+        right: 20px;
+    }
+}
 
-    .product-modal {
-        margin: 1rem;
+@media (max-width: 480px) {
+    header {
+        padding: 0.8rem 0.5rem;
+    }
+    
+    .logo {
+        font-size: 1rem;
+    }
+    
+    .logo-icon {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .nav-links {
+        gap: 0.6rem;
+        font-size: 0.75rem;
+    }
+    
+    .nav-links a {
+        padding: 0.2rem 0.4rem;
+    }
+    
+    .productos-grid {
+        gap: 0.8rem;
+    }
+    
+    .producto-card img {
+        height: 130px;
+    }
+    
+    .producto-info {
+        padding: 0.8rem;
+    }
+    
+    .producto-nombre {
+        font-size: 0.9rem;
+    }
+    
+    .producto-precio {
+        font-size: 1.1rem;
+    }
+    
+    .hero h1 {
+        font-size: 1.6rem;
+    }
+    
+    section h2 {
+        font-size: 1.5rem;
+    }
+    
+    .categorias-sidebar {
+        width: 90%;
+        left: -90%;
     }
 }
