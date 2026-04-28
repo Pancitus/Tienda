@@ -857,7 +857,6 @@ footer {
     section h2 { font-size: 1.5rem; }
 }
 
-/* ===================== GHOST TEXT (placeholder dinámico) ===================== */
-#search::placeholder {
-    color: rgba(255,255,255,0.32);
-}
+/* ===== GHOST AUTOCOMPLETE ===== */
+#search::placeholder { color: rgba(255,255,255,0.35); }
+

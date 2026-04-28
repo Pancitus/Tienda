@@ -84,33 +84,37 @@ function scoreItem(item, term) {
     return best;
 }
 
-// ===================== AUTOCOMPLETE (placeholder dinámico) =====================
+// ===================== AUTOCOMPLETE (ghost text) =====================
 let currentSuggestion = '';
-const PLACEHOLDER_DEFAULT = '🔍 Buscar productos...';
 
-function mostrarAutocomplete(term) {
+function mostrarAutocomplete(sugerencias) {
+    if (!searchInput) return;
     currentSuggestion = '';
+
+    const term = searchInput.value;
     if (!term || !allItems.length) {
-        searchInput.placeholder = PLACEHOLDER_DEFAULT;
+        searchInput.placeholder = '🔍 Buscar productos...';
         return;
     }
+
     const termNorm = normalizar(term);
     const match = allItems.find(i => normalizar(i.name).startsWith(termNorm));
-    if (!match) {
+
+    if (!match || match.name.length <= term.length) {
         searchInput.placeholder = '';
         return;
     }
+
     currentSuggestion = match.name;
-    // El placeholder muestra el nombre completo — el texto escrito lo "tapa" visualmente
     searchInput.placeholder = match.name;
 }
 
 function ocultarAutocomplete() {
     currentSuggestion = '';
-    searchInput.placeholder = PLACEHOLDER_DEFAULT;
+    if (searchInput) searchInput.placeholder = '🔍 Buscar productos...';
 }
 
-function buildSugerencias(rawTerm) { return []; }
+function buildSugerencias(rawTerm) { return [{ tipo: 'dummy' }]; }
 
 // ===================== MENSAJE SIN RESULTADOS =====================
 let noResultsEl = null;
@@ -402,12 +406,10 @@ setInterval(refreshCsv, UPDATE_INTERVAL);
 if (searchInput) {
     searchInput.addEventListener('input', () => {
         filterCards();
-        mostrarAutocomplete(searchInput.value);
+        mostrarAutocomplete([]);
     });
 
-    searchInput.addEventListener('blur', ocultarAutocomplete);
-
-    // Tab o → acepta la sugerencia completa
+    // Tab o → acepta la sugerencia
     searchInput.addEventListener('keydown', e => {
         if ((e.key === 'Tab' || e.key === 'ArrowRight') && currentSuggestion) {
             e.preventDefault();
@@ -416,6 +418,8 @@ if (searchInput) {
             ocultarAutocomplete();
         }
     });
+
+    searchInput.addEventListener('blur', ocultarAutocomplete);
 }
 
 document.addEventListener('keydown', e => {
