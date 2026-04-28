@@ -890,11 +890,11 @@ footer {
 
 .search-ghost {
     position: absolute;
-    top: 0;
+    top: 50%;
     left: 0;
+    transform: translateY(-50%);
     width: 100%;
-    height: 100%;
-    padding: 1.1rem 1.8rem;
+    padding: 0 1.8rem;
     font-size: 1.05rem;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     pointer-events: none;
@@ -902,9 +902,7 @@ footer {
     overflow: hidden;
     z-index: 1;
     box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    border-radius: 25px;
+    line-height: 1;
 }
 
 .ghost-typed {
