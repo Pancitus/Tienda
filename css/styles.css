@@ -862,26 +862,39 @@ footer {
     position: relative;
 }
 
+/* El wrapper del input necesita ser relativo para el ghost */
+.hero-search #search {
+    position: relative;
+    z-index: 10;
+    background: rgba(26, 26, 26, 0.85);
+}
+
 .search-ghost {
     position: absolute;
-    top: 50%;
+    top: 0;
     left: 0;
-    transform: translateY(-50%);
     width: 100%;
-    max-width: 600px;
+    height: 100%;
     padding: 1.1rem 1.8rem;
     font-size: 1.05rem;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: normal;
     pointer-events: none;
     white-space: nowrap;
     overflow: hidden;
-    color: transparent;
     z-index: 9;
-    left: 50%;
-    transform: translate(-50%, -50%);
     box-sizing: border-box;
+    display: flex;
+    align-items: center;
+}
+
+/* La parte ya escrita se oculta exactamente igual que en el input */
+.ghost-typed {
+    color: transparent;
+    white-space: pre;
 }
 
 .ghost-rest {
     color: rgba(255, 255, 255, 0.35);
+    white-space: pre;
 }

@@ -90,10 +90,17 @@ let currentSuggestion = '';
 
 function getGhostEl() {
     if (!ghostEl) {
-        const wrapper = searchInput.parentElement;
-        wrapper.style.position = 'relative';
+        // Envuelve el input en un div relativo para alinear el ghost exactamente
+        let wrapper = searchInput.parentElement;
+        if (!wrapper.classList.contains('search-input-wrap')) {
+            const wrap = document.createElement('div');
+            wrap.className = 'search-input-wrap';
+            wrap.style.cssText = 'position:relative;width:100%;max-width:600px;';
+            searchInput.parentElement.insertBefore(wrap, searchInput);
+            wrap.appendChild(searchInput);
+            wrapper = wrap;
+        }
 
-        // Capa ghost detrás del input
         ghostEl = document.createElement('div');
         ghostEl.className = 'search-ghost';
         wrapper.insertBefore(ghostEl, searchInput);
@@ -108,16 +115,16 @@ function mostrarAutocomplete(sugerencias) {
         ocultarAutocomplete();
         return;
     }
-    // Solo sugerencias de tipo producto que empiecen igual
+    // Solo sugerencias que empiecen con lo que ya escribió (case-insensitive)
     const match = sugerencias.find(s => s.tipo === 'producto' &&
         normalizar(s.texto).startsWith(normalizar(rawVal)));
     if (!match) { ocultarAutocomplete(); return; }
 
     currentSuggestion = match.texto;
-    // Muestra: parte ya escrita (invisible) + resto (gris)
+    // La parte ya escrita en transparente (ocupa espacio) + resto en gris
     const typed = rawVal;
     const rest  = match.texto.slice(typed.length);
-    ghost.innerHTML = '<span style="color:transparent">' + typed + '</span>'
+    ghost.innerHTML = '<span class="ghost-typed">' + typed + '</span>'
                     + '<span class="ghost-rest">' + rest + '</span>';
 }
 
