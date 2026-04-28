@@ -1028,3 +1028,32 @@ footer {
         left: -90%;
     }
 }
+
+/* BUSCADOR */
+.search-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 1rem auto;
+    padding: 0 2rem;
+}
+
+#search {
+    width: 100%;
+    padding: 0.9rem 1.2rem;
+    border-radius: 25px;
+    border: 2px solid rgba(138, 43, 226, 0.5);
+    background: rgba(26, 26, 26, 0.8);
+    color: white;
+    outline: none;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+#search::placeholder {
+    color: #aaa;
+}
+
+#search:focus {
+    border-color: #8a2be2;
+    box-shadow: 0 0 15px rgba(138, 43, 226, 0.4);
+}

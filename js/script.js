@@ -80,24 +80,17 @@ function filterCategorias() {
 }
 
 function filterBySearch() {
-    const term = searchInput ? searchInput.value.toLowerCase() : '';
-    const filterCategory = currentFilter.toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .trim();
-    
-    let visibleCount = 0;
+    const term = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    const filterCategory = currentFilter.toLowerCase();
+
     grid.querySelectorAll('.producto-card').forEach(function(card) {
         const name = card.querySelector('.producto-nombre').textContent.toLowerCase();
         const category = card.dataset.category || '';
-        
+
         const matchesSearch = name.includes(term);
         const matchesCategory = !filterCategory || category.includes(filterCategory);
-        
-        const shouldShow = matchesSearch && matchesCategory;
-        card.style.display = shouldShow ? '' : 'none';
-        
-        if (shouldShow) visibleCount++;
+
+        card.style.display = (matchesSearch && matchesCategory) ? '' : 'none';
     });
 }
 
