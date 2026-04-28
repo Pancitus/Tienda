@@ -3,61 +3,27 @@ const CSV_URL = 'https://docs.google.com/spreadsheets/d/1ApjOy0d0sTGOwFQNPif-bgb
 const UPDATE_INTERVAL = 5000;
 
 // ===================== ELEMENTOS DEL DOM =====================
-const grid = document.getElementById('productos-grid');
-const searchInput = document.getElementById('search'); // buscador del hero
+const grid       = document.getElementById('productos-grid');
+const searchInput = document.getElementById('search');
 let currentFilter = '';
-
-// ===================== NAVEGACIÓN Y MENÚ (solo móvil) =====================
-function openCategorias(e) {
-    if (e) e.preventDefault();
-    document.getElementById('categoriasSidebar').classList.add('active');
-    document.getElementById('sidebarOverlay').classList.add('active');
-    document.body.style.overflow = 'hidden';
-}
-
-function closeCategorias() {
-    document.getElementById('categoriasSidebar').classList.remove('active');
-    document.getElementById('sidebarOverlay').classList.remove('active');
-    document.body.style.overflow = '';
-}
-
-function toggleCategoria(header) {
-    const item = header.parentElement;
-    const wasActive = item.classList.contains('active');
-
-    document.querySelectorAll('.categoria-item').forEach(function(cat) {
-        cat.classList.remove('active');
-    });
-
-    if (!wasActive) {
-        item.classList.add('active');
-    }
-}
-
-// Cerrar sidebar con tecla Escape
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeCategorias();
-        closeProductModal();
-    }
-});
 
 // ===================== FILTRADO =====================
 
 /**
- * Activa un filtro de categoría.
- * Funciona tanto desde el sidebar móvil como desde las pills de desktop.
+ * Activa un filtro de categoría desde los pills.
+ * Actualiza el estado visual y filtra las cards.
  */
-function filterByCategory(category) {
+function setFilter(btn, category) {
+    document.querySelectorAll('.filter-pill').forEach(function(pill) {
+        pill.classList.remove('active');
+    });
+    btn.classList.add('active');
+
     currentFilter = category.toLowerCase();
 
-    // Limpiar buscador de texto
     if (searchInput) searchInput.value = '';
-    const sidebarSearch = document.getElementById('sidebar-search');
-    if (sidebarSearch) sidebarSearch.value = '';
 
-    filterBySearch();
-    closeCategorias();
+    filterCards();
 
     setTimeout(function() {
         const section = document.querySelector('#productos');
@@ -66,30 +32,10 @@ function filterByCategory(category) {
 }
 
 /**
- * Maneja el clic en las pills de categorías de desktop.
- * Actualiza el estado visual (active) y llama a filterByCategory.
- */
-function setDesktopFilter(btn, category) {
-    // Quitar .active de todos los pills
-    document.querySelectorAll('.filter-pill').forEach(function(pill) {
-        pill.classList.remove('active');
-    });
-    // Activar el pill clickeado
-    btn.classList.add('active');
-
-    filterByCategory(category);
-}
-
-/**
  * Filtra las cards por texto del buscador y/o categoría activa.
- * Se llama desde ambos buscadores (hero y sidebar).
  */
-function filterBySearch() {
-    // Usa el buscador que tenga contenido, priorizando el hero
-    const heroTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
-    const sidebarInput = document.getElementById('sidebar-search');
-    const sidebarTerm = sidebarInput ? sidebarInput.value.toLowerCase().trim() : '';
-    const term = heroTerm || sidebarTerm;
+function filterCards() {
+    const term = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
     grid.querySelectorAll('.producto-card').forEach(function(card) {
         const name     = card.querySelector('.producto-nombre').textContent.toLowerCase();
@@ -162,23 +108,20 @@ async function fetchCsv(url) {
 
         const clean = function(v) { return (v || '').replace(/^"|"$/g, ''); };
 
-        const id           = clean(cols[0]);
-        const name         = clean(cols[1]);
-        const categoryRaw  = clean(cols[2]);
-        const cantidad     = clean(cols[3]) || '0';
-        const precioRaw    = clean(cols[4]) || '0';
+        const id             = clean(cols[0]);
+        const name           = clean(cols[1]);
+        const categoryRaw    = clean(cols[2]);
+        const cantidad       = clean(cols[3]) || '0';
+        const precioRaw      = clean(cols[4]) || '0';
         const descripcionRaw = clean(cols[5]);
-        const imageCell    = clean(cols[6]);
+        const imageCell      = clean(cols[6]);
 
-        // Formato del precio
         let precio = precioRaw;
         if (precio && !precio.includes('$')) precio = '$' + precio;
         if (!precio || precio === '$') precio = '$0';
 
-        // Descripción de respaldo
         const descripcion = descripcionRaw || (name + ' - Categoría: ' + categoryRaw);
 
-        // Normalizar categoría (sin tildes, minúsculas)
         const category = categoryRaw
             .toLowerCase()
             .normalize('NFD')
@@ -204,8 +147,7 @@ async function fetchCsv(url) {
 }
 
 // ===================== SINCRONIZACIÓN DE CARDS =====================
-function syncImages(newItems) {
-    // Ordenar alfabéticamente
+function syncCards(newItems) {
     newItems.sort(function(a, b) {
         return a.name.localeCompare(b.name, 'es', { sensitivity: 'base' });
     });
@@ -227,24 +169,24 @@ function syncImages(newItems) {
 
         if (!card) {
             card = document.createElement('div');
-            card.className      = 'producto-card';
-            card.dataset.id     = item.id;
+            card.className        = 'producto-card';
+            card.dataset.id       = item.id;
             card.dataset.category = item.category;
 
-            const img  = document.createElement('img');
-            img.src    = item.url;
+            const img   = document.createElement('img');
+            img.src     = item.url;
             img.loading = 'lazy';
-            img.alt    = item.name;
+            img.alt     = item.name;
             img.onerror = function() { img.style.opacity = '0.3'; };
 
-            const info = document.createElement('div');
+            const info    = document.createElement('div');
             info.className = 'producto-info';
 
-            const nombre = document.createElement('div');
+            const nombre      = document.createElement('div');
             nombre.className  = 'producto-nombre';
             nombre.textContent = item.name;
 
-            const precio = document.createElement('div');
+            const precio      = document.createElement('div');
             precio.className  = 'producto-precio';
             precio.textContent = item.precio;
 
@@ -256,7 +198,6 @@ function syncImages(newItems) {
 
             grid.appendChild(card);
         } else {
-            // Actualizar datos si cambiaron
             const img = card.querySelector('img');
             if (img.src !== item.url) img.src = item.url;
 
@@ -276,13 +217,13 @@ function syncImages(newItems) {
         }
     });
 
-    filterBySearch();
+    filterCards();
 }
 
 async function refreshCsv() {
     try {
         const items = await fetchCsv(CSV_URL);
-        syncImages(items);
+        syncCards(items);
     } catch (err) {
         console.error('Error cargando productos:', err);
     }
@@ -290,11 +231,11 @@ async function refreshCsv() {
 
 // ===================== MODAL DE PRODUCTO =====================
 function openProductModal(item) {
-    const overlay = document.createElement('div');
+    const overlay   = document.createElement('div');
     overlay.className = 'product-modal-overlay';
     overlay.onclick   = closeProductModal;
 
-    const modal   = document.createElement('div');
+    const modal     = document.createElement('div');
     modal.className = 'product-modal';
     modal.onclick   = function(e) { e.stopPropagation(); };
 
@@ -350,10 +291,15 @@ function closeProductModal() {
 refreshCsv();
 setInterval(refreshCsv, UPDATE_INTERVAL);
 
-// Buscador del hero
+// Buscador
 if (searchInput) {
-    searchInput.oninput = filterBySearch;
+    searchInput.oninput = filterCards;
 }
+
+// Cerrar modal con Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeProductModal();
+});
 
 // Scroll suave para links internos
 document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
