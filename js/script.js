@@ -84,44 +84,46 @@ function scoreItem(item, term) {
     return best;
 }
 
-// ===================== AUTOCOMPLETE =====================
-let autocompleteEl = null;
+// ===================== AUTOCOMPLETE INLINE (ghost text) =====================
+let ghostEl = null;
+let currentSuggestion = '';
 
-function getAutocompleteEl() {
-    if (!autocompleteEl) {
-        autocompleteEl = document.createElement('div');
-        autocompleteEl.className = 'search-autocomplete';
-        searchInput.parentElement.style.position = 'relative';
-        searchInput.parentElement.appendChild(autocompleteEl);
+function getGhostEl() {
+    if (!ghostEl) {
+        const wrapper = searchInput.parentElement;
+        wrapper.style.position = 'relative';
+
+        // Capa ghost detrás del input
+        ghostEl = document.createElement('div');
+        ghostEl.className = 'search-ghost';
+        wrapper.insertBefore(ghostEl, searchInput);
     }
-    return autocompleteEl;
+    return ghostEl;
 }
 
 function mostrarAutocomplete(sugerencias) {
-    const el = getAutocompleteEl();
-    el.innerHTML = '';
+    const ghost = getGhostEl();
+    const rawVal = searchInput.value;
+    if (!sugerencias.length || !rawVal) {
+        ocultarAutocomplete();
+        return;
+    }
+    // Solo sugerencias de tipo producto que empiecen igual
+    const match = sugerencias.find(s => s.tipo === 'producto' &&
+        normalizar(s.texto).startsWith(normalizar(rawVal)));
+    if (!match) { ocultarAutocomplete(); return; }
 
-    if (!sugerencias.length) { ocultarAutocomplete(); return; }
-
-    sugerencias.forEach(s => {
-        const item = document.createElement('div');
-        item.className = 'autocomplete-item';
-        item.innerHTML = (s.tipo === 'historial' ? '🕐 ' : '🔍 ') + s.texto;
-        // mousedown en vez de click para que ocurra antes del blur del input
-        item.addEventListener('mousedown', e => {
-            e.preventDefault();
-            searchInput.value = s.texto;
-            filterCards();
-            ocultarAutocomplete();
-        });
-        el.appendChild(item);
-    });
-
-    el.classList.add('active');
+    currentSuggestion = match.texto;
+    // Muestra: parte ya escrita (invisible) + resto (gris)
+    const typed = rawVal;
+    const rest  = match.texto.slice(typed.length);
+    ghost.innerHTML = '<span style="color:transparent">' + typed + '</span>'
+                    + '<span class="ghost-rest">' + rest + '</span>';
 }
 
 function ocultarAutocomplete() {
-    if (autocompleteEl) autocompleteEl.classList.remove('active');
+    currentSuggestion = '';
+    if (ghostEl) ghostEl.innerHTML = '';
 }
 
 function buildSugerencias(rawTerm) {
@@ -129,15 +131,9 @@ function buildSugerencias(rawTerm) {
     const sugerencias = [];
     const vistos = new Set();
 
-    if (!term) {
-        // Sin texto → mostrar historial reciente
-        getHistorial().slice(0, 5).forEach(t => {
-            sugerencias.push({ texto: t, tipo: 'historial' });
-        });
-        return sugerencias;
-    }
+    if (!term) return sugerencias;
 
-    // 1. Nombres que empiezan con el término (mayor prioridad)
+    // Nombres que empiezan con el término (mayor prioridad)
     allItems
         .filter(i => normalizar(i.name).startsWith(term))
         .slice(0, 3)
@@ -148,7 +144,7 @@ function buildSugerencias(rawTerm) {
             }
         });
 
-    // 2. Nombres que contienen el término
+    // Nombres que contienen el término
     allItems
         .filter(i => !vistos.has(i.name) && normalizar(i.name).includes(term))
         .slice(0, 5 - sugerencias.length)
@@ -448,20 +444,26 @@ refreshCsv();
 setInterval(refreshCsv, UPDATE_INTERVAL);
 
 if (searchInput) {
-    // Mientras escribe: filtrar + autocomplete
     searchInput.addEventListener('input', () => {
         filterCards();
         mostrarAutocomplete(buildSugerencias(searchInput.value));
     });
 
-    // Al enfocar: mostrar historial si el campo está vacío
     searchInput.addEventListener('focus', () => {
-        const s = buildSugerencias(searchInput.value);
-        if (s.length) mostrarAutocomplete(s);
+        mostrarAutocomplete(buildSugerencias(searchInput.value));
     });
 
-    // Al perder foco: ocultar autocomplete (con delay para permitir el click)
-    searchInput.addEventListener('blur', () => setTimeout(ocultarAutocomplete, 150));
+    searchInput.addEventListener('blur', () => ocultarAutocomplete());
+
+    // Tab o ArrowRight al final → acepta la sugerencia
+    searchInput.addEventListener('keydown', e => {
+        if ((e.key === 'Tab' || e.key === 'ArrowRight') && currentSuggestion) {
+            e.preventDefault();
+            searchInput.value = currentSuggestion;
+            filterCards();
+            ocultarAutocomplete();
+        }
+    });
 }
 
 document.addEventListener('keydown', e => {
