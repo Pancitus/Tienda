@@ -269,24 +269,41 @@ function extractUrlFromFormula(cellValue) {
 }
 
 // ===================== PARSEO DE CSV =====================
+// Parser robusto: respeta saltos de línea dentro de celdas entre comillas
+function parseCsvText(text) {
+    const rows = [];
+    let col = '', inQ = false, row = [];
+    for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (ch === '"') {
+            if (inQ && text[i+1] === '"') { col += '"'; i++; }
+            else { inQ = !inQ; }
+        } else if (ch === ',' && !inQ) {
+            row.push(col); col = '';
+        } else if ((ch === '\n' || (ch === '\r' && text[i+1] === '\n')) && !inQ) {
+            if (ch === '\r') i++;
+            row.push(col); col = '';
+            if (row.some(c => c.trim())) rows.push(row);
+            row = [];
+        } else {
+            col += ch;
+        }
+    }
+    row.push(col);
+    if (row.some(c => c.trim())) rows.push(row);
+    return rows;
+}
+
 async function fetchCsv(url) {
     const res = await fetch(url + '&_ts=' + Date.now());
     if (!res.ok) throw new Error('HTTP ' + res.status);
 
-    const lines = (await res.text()).split(/\r?\n/).filter(l => l.trim());
+    const rows  = parseCsvText(await res.text());
     const items = [];
 
-    for (let li = 1; li < lines.length; li++) {
-        const cols = [];
-        let col = '', inQ = false;
-        for (const ch of lines[li]) {
-            if (ch === '"') { inQ = !inQ; }
-            else if (ch === ',' && !inQ) { cols.push(col.trim()); col = ''; }
-            else { col += ch; }
-        }
-        cols.push(col.trim());
-
-        const c = v => (v || '').replace(/^"|"$/g, '');
+    for (let li = 1; li < rows.length; li++) {
+        const cols = rows[li];
+        const c = v => (v || '').trim().replace(/^"|"$/g, '');
         const id             = c(cols[0]);
         const name           = c(cols[1]);
         const categoryRaw    = c(cols[2]);
