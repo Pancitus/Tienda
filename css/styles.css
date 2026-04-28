@@ -949,11 +949,8 @@ footer {
     text-transform: uppercase;
 }
 
-.oferta-badge img {
-    width: 18px;
-    height: 18px;
-    object-fit: contain;
-    filter: brightness(0) invert(1);
+.oferta-badge svg {
+    flex-shrink: 0;
 }
 
 @keyframes badge-pop {

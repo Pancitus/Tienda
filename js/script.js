@@ -367,7 +367,7 @@ function syncCards(newItems) {
             if (item.esOferta) {
                 const badge = document.createElement('div');
                 badge.className = 'oferta-badge';
-                badge.innerHTML = '<img src="https://cdn-icons-png.flaticon.com/512/1170/1170678.png" alt="Oferta"> Oferta';
+                badge.innerHTML = `<svg viewBox="0 0 24 24" fill="white" width="16" height="16" style="flex-shrink:0"><path d="M21.41 11.58l-9-9A2 2 0 0 0 11 2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 .59 1.42l9 9A2 2 0 0 0 13 22a2 2 0 0 0 1.41-.59l7-7A2 2 0 0 0 22 13a2 2 0 0 0-.59-1.42zM6.5 8A1.5 1.5 0 1 1 8 6.5 1.5 1.5 0 0 1 6.5 8z"/></svg> Oferta`;
                 card.appendChild(badge);
             }
 
