@@ -857,33 +857,7 @@ footer {
     section h2 { font-size: 1.5rem; }
 }
 
-/* ===================== GHOST TEXT ===================== */
-#search-ghost {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    left: 0;
-    padding: 0 1.8rem;
-    width: 100%;
-    font-size: 1.05rem;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+/* ===================== GHOST TEXT (placeholder dinámico) ===================== */
+#search::placeholder {
     color: rgba(255,255,255,0.32);
-    pointer-events: none;
-    white-space: nowrap;
-    overflow: hidden;
-    z-index: 0;
-    box-sizing: border-box;
 }
-
-/* Input transparente para que el ghost sea visible debajo */
-.hero-search {
-    position: relative;
-}
-.hero-search #search {
-    position: relative;
-    z-index: 1;
-    background: rgba(26,26,26,0.8);
-    caret-color: white;
-}
-/* El ghost va detrás del input — usamos el color del input para "tapar" la parte escrita */
-/* Truco: el ghost está posicionado igual que el texto del input, pero solo se ve el sufijo */

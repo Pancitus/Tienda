@@ -84,50 +84,33 @@ function scoreItem(item, term) {
     return best;
 }
 
-// ===================== AUTOCOMPLETE (ghost text inline) =====================
-let ghostEl = null;
+// ===================== AUTOCOMPLETE (placeholder dinámico) =====================
 let currentSuggestion = '';
-
-function initGhost() {
-    if (ghostEl || !searchInput) return;
-    // Crear el ghost DENTRO del mismo contenedor que el input
-    const container = searchInput.parentElement;
-    container.style.position = 'relative';
-    ghostEl = document.createElement('div');
-    ghostEl.id = 'search-ghost';
-    container.appendChild(ghostEl);
-}
+const PLACEHOLDER_DEFAULT = '🔍 Buscar productos...';
 
 function mostrarAutocomplete(term) {
-    initGhost();
     currentSuggestion = '';
-    ghostEl.innerHTML = '';
-    if (!term || !allItems.length) return;
-
+    if (!term || !allItems.length) {
+        searchInput.placeholder = PLACEHOLDER_DEFAULT;
+        return;
+    }
     const termNorm = normalizar(term);
     const match = allItems.find(i => normalizar(i.name).startsWith(termNorm));
-    if (!match) return;
-
-    const sufijo = match.name.slice(term.length);
-    if (!sufijo) return;
-
+    if (!match) {
+        searchInput.placeholder = '';
+        return;
+    }
     currentSuggestion = match.name;
-
-    // Span invisible (ocupa el espacio de lo ya escrito) + sufijo visible en gris
-    ghostEl.innerHTML =
-        '<span style="color:transparent">' + term + '</span>' +
-        '<span>' + sufijo + '</span>';
+    // El placeholder muestra el nombre completo — el texto escrito lo "tapa" visualmente
+    searchInput.placeholder = match.name;
 }
 
 function ocultarAutocomplete() {
     currentSuggestion = '';
-    if (ghostEl) ghostEl.textContent = '';
+    searchInput.placeholder = PLACEHOLDER_DEFAULT;
 }
 
-function buildSugerencias(rawTerm) {
-    // Mantenemos compatibilidad — ahora solo usamos mostrarAutocomplete directo
-    return [];
-}
+function buildSugerencias(rawTerm) { return []; }
 
 // ===================== MENSAJE SIN RESULTADOS =====================
 let noResultsEl = null;
