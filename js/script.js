@@ -84,86 +84,49 @@ function scoreItem(item, term) {
     return best;
 }
 
-// ===================== AUTOCOMPLETE INLINE (ghost text) =====================
+// ===================== AUTOCOMPLETE (ghost text inline) =====================
 let ghostEl = null;
 let currentSuggestion = '';
 
-function getGhostEl() {
-    if (!ghostEl) {
-        // Envuelve el input en un div relativo para alinear el ghost exactamente
-        let wrapper = searchInput.parentElement;
-        if (!wrapper.classList.contains('search-input-wrap')) {
-            const wrap = document.createElement('div');
-            wrap.className = 'search-input-wrap';
-            wrap.style.cssText = 'position:relative;width:100%;max-width:600px;';
-            searchInput.parentElement.insertBefore(wrap, searchInput);
-            wrap.appendChild(searchInput);
-            wrapper = wrap;
-        }
-
-        ghostEl = document.createElement('div');
-        ghostEl.className = 'search-ghost';
-        wrapper.insertBefore(ghostEl, searchInput);
-    }
-    return ghostEl;
+function initGhost() {
+    if (ghostEl || !searchInput) return;
+    // Crear el ghost DENTRO del mismo contenedor que el input
+    const container = searchInput.parentElement;
+    container.style.position = 'relative';
+    ghostEl = document.createElement('div');
+    ghostEl.id = 'search-ghost';
+    container.appendChild(ghostEl);
 }
 
-function mostrarAutocomplete(sugerencias) {
-    const ghost = getGhostEl();
-    const rawVal = searchInput.value;
-    if (!sugerencias.length || !rawVal) { ocultarAutocomplete(); return; }
+function mostrarAutocomplete(term) {
+    initGhost();
+    currentSuggestion = '';
+    ghostEl.innerHTML = '';
+    if (!term || !allItems.length) return;
 
-    // Buscar producto cuyo nombre normalizado empiece con lo escrito
-    const match = sugerencias.find(s =>
-        s.tipo === 'producto' && normalizar(s.texto).startsWith(normalizar(rawVal))
-    );
-    if (!match) { ocultarAutocomplete(); return; }
+    const termNorm = normalizar(term);
+    const match = allItems.find(i => normalizar(i.name).startsWith(termNorm));
+    if (!match) return;
 
-    currentSuggestion = match.texto;
+    const sufijo = match.name.slice(term.length);
+    if (!sufijo) return;
 
-    // El "resto" es la parte del nombre original después de los chars ya escritos
-    const rest = match.texto.slice(rawVal.length);
-    if (!rest) { ocultarAutocomplete(); return; } // ya escribió todo
+    currentSuggestion = match.name;
 
-    // Ghost: parte escrita invisible (para empujar el texto) + sufijo gris
-    ghost.innerHTML =
-        '<span class="ghost-typed">' + rawVal + '</span>' +
-        '<span class="ghost-rest">' + rest + '</span>';
+    // Span invisible (ocupa el espacio de lo ya escrito) + sufijo visible en gris
+    ghostEl.innerHTML =
+        '<span style="color:transparent">' + term + '</span>' +
+        '<span>' + sufijo + '</span>';
 }
 
 function ocultarAutocomplete() {
     currentSuggestion = '';
-    if (ghostEl) ghostEl.innerHTML = '';
+    if (ghostEl) ghostEl.textContent = '';
 }
 
 function buildSugerencias(rawTerm) {
-    const term = normalizar(rawTerm);
-    const sugerencias = [];
-    const vistos = new Set();
-
-    if (!term) return sugerencias;
-
-    // Nombres que empiezan con el término (mayor prioridad)
-    allItems
-        .filter(i => normalizar(i.name).startsWith(term))
-        .slice(0, 3)
-        .forEach(i => {
-            if (!vistos.has(i.name)) {
-                vistos.add(i.name);
-                sugerencias.push({ texto: i.name, tipo: 'producto' });
-            }
-        });
-
-    // Nombres que contienen el término
-    allItems
-        .filter(i => !vistos.has(i.name) && normalizar(i.name).includes(term))
-        .slice(0, 5 - sugerencias.length)
-        .forEach(i => {
-            vistos.add(i.name);
-            sugerencias.push({ texto: i.name, tipo: 'producto' });
-        });
-
-    return sugerencias.slice(0, 5);
+    // Mantenemos compatibilidad — ahora solo usamos mostrarAutocomplete directo
+    return [];
 }
 
 // ===================== MENSAJE SIN RESULTADOS =====================
@@ -456,16 +419,12 @@ setInterval(refreshCsv, UPDATE_INTERVAL);
 if (searchInput) {
     searchInput.addEventListener('input', () => {
         filterCards();
-        mostrarAutocomplete(buildSugerencias(searchInput.value));
+        mostrarAutocomplete(searchInput.value);
     });
 
-    searchInput.addEventListener('focus', () => {
-        mostrarAutocomplete(buildSugerencias(searchInput.value));
-    });
+    searchInput.addEventListener('blur', ocultarAutocomplete);
 
-    searchInput.addEventListener('blur', () => ocultarAutocomplete());
-
-    // Tab o ArrowRight al final → acepta la sugerencia
+    // Tab o → acepta la sugerencia completa
     searchInput.addEventListener('keydown', e => {
         if ((e.key === 'Tab' || e.key === 'ArrowRight') && currentSuggestion) {
             e.preventDefault();

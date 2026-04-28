@@ -195,7 +195,7 @@ nav {
     background: linear-gradient(135deg, rgba(138, 43, 226, 0.15), rgba(0, 212, 255, 0.1));
     position: relative;
     z-index: 1;
-    overflow: hidden;
+    /* Sin overflow:hidden para no cortar nada */
 }
 
 .hero::before {
@@ -857,60 +857,30 @@ footer {
     section h2 { font-size: 1.5rem; }
 }
 
-/* ===================== GHOST TEXT (autocomplete inline) ===================== */
-.hero-search {
-    position: relative;
-}
-
-/* Wrapper que JS crea alrededor del input */
-.search-input-wrap {
-    position: relative;
-    width: 100%;
-    max-width: 600px;
-    border-radius: 25px;
-    background: rgba(26, 26, 26, 0.8);
-    border: 2px solid rgba(138, 43, 226, 0.5);
-    transition: border-color 0.3s, box-shadow 0.3s;
-}
-
-.search-input-wrap:focus-within {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 15px rgba(138, 43, 226, 0.4);
-}
-
-/* El input va transparente encima del ghost */
-.hero-search #search {
-    position: relative;
-    z-index: 2;
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    width: 100%;
-}
-
-.search-ghost {
+/* ===================== GHOST TEXT ===================== */
+#search-ghost {
     position: absolute;
     top: 50%;
-    left: 0;
     transform: translateY(-50%);
-    width: 100%;
-    padding: 0 1.8rem;
+    left: 1.8rem;
     font-size: 1.05rem;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: rgba(255,255,255,0.32);
     pointer-events: none;
     white-space: nowrap;
     overflow: hidden;
+    z-index: 0;
+}
+
+/* Input transparente para que el ghost sea visible debajo */
+.hero-search {
+    position: relative;
+}
+.hero-search #search {
+    position: relative;
     z-index: 1;
-    box-sizing: border-box;
-    line-height: 1;
+    background: rgba(26,26,26,0.8);
+    caret-color: white;
 }
-
-.ghost-typed {
-    color: transparent;
-    white-space: pre;
-}
-
-.ghost-rest {
-    color: rgba(255, 255, 255, 0.38);
-    white-space: pre;
-}
+/* El ghost va detrás del input — usamos el color del input para "tapar" la parte escrita */
+/* Truco: el ghost está posicionado igual que el texto del input, pero solo se ve el sufijo */
