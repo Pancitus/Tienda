@@ -857,6 +857,69 @@ footer {
     section h2 { font-size: 1.5rem; }
 }
 
-/* ===== GHOST AUTOCOMPLETE ===== */
-#search::placeholder { color: rgba(255,255,255,0.35); }
+/* ===================== CARRUSEL MODAL ===================== */
+.modal-carousel {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.3);
+    border-radius: 15px;
+    overflow: hidden;
+    min-height: 280px;
+}
 
+.modal-carousel img {
+    width: 100%;
+    height: 300px;
+    object-fit: contain;
+    border-radius: 15px;
+    transition: opacity 0.25s ease;
+}
+
+.carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(138,43,226,0.75);
+    border: none;
+    color: white;
+    font-size: 2rem;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transition: background 0.2s;
+    line-height: 1;
+}
+
+.carousel-btn:hover { background: var(--color-primary); }
+.carousel-prev { left: 10px; }
+.carousel-next { right: 10px; }
+
+.carousel-dots {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+}
+
+.carousel-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.35);
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.carousel-dot.active {
+    background: var(--color-primary);
+    transform: scale(1.3);
+}

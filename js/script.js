@@ -84,37 +84,81 @@ function scoreItem(item, term) {
     return best;
 }
 
-// ===================== AUTOCOMPLETE (ghost text) =====================
-let currentSuggestion = '';
+// ===================== AUTOCOMPLETE =====================
+let autocompleteEl = null;
+
+function getAutocompleteEl() {
+    if (!autocompleteEl) {
+        autocompleteEl = document.createElement('div');
+        autocompleteEl.className = 'search-autocomplete';
+        searchInput.parentElement.style.position = 'relative';
+        searchInput.parentElement.appendChild(autocompleteEl);
+    }
+    return autocompleteEl;
+}
 
 function mostrarAutocomplete(sugerencias) {
-    if (!searchInput) return;
-    currentSuggestion = '';
+    const el = getAutocompleteEl();
+    el.innerHTML = '';
 
-    const term = searchInput.value;
-    if (!term || !allItems.length) {
-        searchInput.placeholder = '🔍 Buscar productos...';
-        return;
-    }
+    if (!sugerencias.length) { ocultarAutocomplete(); return; }
 
-    const termNorm = normalizar(term);
-    const match = allItems.find(i => normalizar(i.name).startsWith(termNorm));
+    sugerencias.forEach(s => {
+        const item = document.createElement('div');
+        item.className = 'autocomplete-item';
+        item.innerHTML = (s.tipo === 'historial' ? '🕐 ' : '🔍 ') + s.texto;
+        // mousedown en vez de click para que ocurra antes del blur del input
+        item.addEventListener('mousedown', e => {
+            e.preventDefault();
+            searchInput.value = s.texto;
+            filterCards();
+            ocultarAutocomplete();
+        });
+        el.appendChild(item);
+    });
 
-    if (!match || match.name.length <= term.length) {
-        searchInput.placeholder = '';
-        return;
-    }
-
-    currentSuggestion = match.name;
-    searchInput.placeholder = match.name;
+    el.classList.add('active');
 }
 
 function ocultarAutocomplete() {
-    currentSuggestion = '';
-    if (searchInput) searchInput.placeholder = '🔍 Buscar productos...';
+    if (autocompleteEl) autocompleteEl.classList.remove('active');
 }
 
-function buildSugerencias(rawTerm) { return [{ tipo: 'dummy' }]; }
+function buildSugerencias(rawTerm) {
+    const term = normalizar(rawTerm);
+    const sugerencias = [];
+    const vistos = new Set();
+
+    if (!term) {
+        // Sin texto → mostrar historial reciente
+        getHistorial().slice(0, 5).forEach(t => {
+            sugerencias.push({ texto: t, tipo: 'historial' });
+        });
+        return sugerencias;
+    }
+
+    // 1. Nombres que empiezan con el término (mayor prioridad)
+    allItems
+        .filter(i => normalizar(i.name).startsWith(term))
+        .slice(0, 3)
+        .forEach(i => {
+            if (!vistos.has(i.name)) {
+                vistos.add(i.name);
+                sugerencias.push({ texto: i.name, tipo: 'producto' });
+            }
+        });
+
+    // 2. Nombres que contienen el término
+    allItems
+        .filter(i => !vistos.has(i.name) && normalizar(i.name).includes(term))
+        .slice(0, 5 - sugerencias.length)
+        .forEach(i => {
+            vistos.add(i.name);
+            sugerencias.push({ texto: i.name, tipo: 'producto' });
+        });
+
+    return sugerencias.slice(0, 5);
+}
 
 // ===================== MENSAJE SIN RESULTADOS =====================
 let noResultsEl = null;
@@ -257,12 +301,24 @@ async function fetchCsv(url) {
 
         const descripcion = descripcionRaw || `${name} - Categoría: ${categoryRaw}`;
         const category    = normalizar(categoryRaw);
-        const imgUrl      = extractUrlFromFormula(imageCell);
+        const imgUrl = extractUrlFromFormula(imageCell);
+
+        // Imágenes extra: cols[7], cols[8], cols[9]...
+        const extraUrls = [];
+        for (let ci = 7; ci < cols.length; ci++) {
+            const extra = extractUrlFromFormula(c(cols[ci]));
+            if (extra) extraUrls.push(normalizeDriveUrl(extra));
+        }
 
         if (id && name) {
+            const mainUrl = imgUrl ? normalizeDriveUrl(imgUrl) : null;
+            const allUrls = mainUrl
+                ? [mainUrl, ...extraUrls]
+                : (extraUrls.length ? extraUrls : ['https://via.placeholder.com/200']);
             items.push({
                 id, name, category,
-                url:      imgUrl ? normalizeDriveUrl(imgUrl) : 'https://via.placeholder.com/200',
+                url:      allUrls[0],
+                urls:     allUrls,
                 cantidad: parseInt(cantidad) || 0,
                 precio, descripcion
             });
@@ -362,12 +418,24 @@ function openProductModal(item) {
     const whatsappUrl = 'https://wa.me/593963426407?text='
         + encodeURIComponent(`Hola, estoy interesado en: ${item.name} - ${item.precio}`);
 
+    const urls = item.urls && item.urls.length > 1 ? item.urls : null;
+    const carruselHTML = urls ? `
+        <div class="modal-carousel">
+            <img id="carousel-img" src="${urls[0]}" alt="${item.name}" onerror="this.style.opacity='0.3'">
+            <button class="carousel-btn carousel-prev" onclick="carouselNav(-1)">&#8249;</button>
+            <button class="carousel-btn carousel-next" onclick="carouselNav(1)">&#8250;</button>
+            <div class="carousel-dots">
+                ${urls.map((_, i) => `<span class="carousel-dot ${i===0?'active':''}" onclick="carouselGo(${i})"></span>`).join('')}
+            </div>
+        </div>` : `
+        <div class="modal-image">
+            <img src="${item.url}" alt="${item.name}" onerror="this.style.opacity='0.3'">
+        </div>`;
+
     modal.innerHTML =
         `<button class="modal-close" onclick="closeProductModal()" aria-label="Cerrar">✕</button>
         <div class="modal-content">
-            <div class="modal-image">
-                <img src="${item.url}" alt="${item.name}" onerror="this.style.opacity='0.3'">
-            </div>
+            ${carruselHTML}
             <div class="modal-details">
                 <h2 class="modal-title">${item.name}</h2>
                 <div class="modal-category">${item.category}</div>
@@ -385,10 +453,32 @@ function openProductModal(item) {
             </div>
         </div>`;
 
+    // Guardar URLs para navegación
+    if (urls) {
+        modal._urls  = urls;
+        modal._index = 0;
+    }
+
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
     document.body.style.overflow = 'hidden';
     setTimeout(() => overlay.classList.add('active'), 10);
+}
+
+function carouselNav(dir) {
+    const modal = document.querySelector('.product-modal');
+    if (!modal || !modal._urls) return;
+    modal._index = (modal._index + dir + modal._urls.length) % modal._urls.length;
+    carouselGo(modal._index);
+}
+
+function carouselGo(index) {
+    const modal = document.querySelector('.product-modal');
+    if (!modal || !modal._urls) return;
+    modal._index = index;
+    document.getElementById('carousel-img').src = modal._urls[index];
+    document.querySelectorAll('.carousel-dot').forEach((d, i) =>
+        d.classList.toggle('active', i === index));
 }
 
 function closeProductModal() {
@@ -404,22 +494,20 @@ refreshCsv();
 setInterval(refreshCsv, UPDATE_INTERVAL);
 
 if (searchInput) {
+    // Mientras escribe: filtrar + autocomplete
     searchInput.addEventListener('input', () => {
         filterCards();
-        mostrarAutocomplete([]);
+        mostrarAutocomplete(buildSugerencias(searchInput.value));
     });
 
-    // Tab o → acepta la sugerencia
-    searchInput.addEventListener('keydown', e => {
-        if ((e.key === 'Tab' || e.key === 'ArrowRight') && currentSuggestion) {
-            e.preventDefault();
-            searchInput.value = currentSuggestion;
-            filterCards();
-            ocultarAutocomplete();
-        }
+    // Al enfocar: mostrar historial si el campo está vacío
+    searchInput.addEventListener('focus', () => {
+        const s = buildSugerencias(searchInput.value);
+        if (s.length) mostrarAutocomplete(s);
     });
 
-    searchInput.addEventListener('blur', ocultarAutocomplete);
+    // Al perder foco: ocultar autocomplete (con delay para permitir el click)
+    searchInput.addEventListener('blur', () => setTimeout(ocultarAutocomplete, 150));
 }
 
 document.addEventListener('keydown', e => {
