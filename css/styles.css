@@ -862,11 +862,30 @@ footer {
     position: relative;
 }
 
-/* El wrapper del input necesita ser relativo para el ghost */
+/* Wrapper que JS crea alrededor del input */
+.search-input-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    border-radius: 25px;
+    background: rgba(26, 26, 26, 0.8);
+    border: 2px solid rgba(138, 43, 226, 0.5);
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.search-input-wrap:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 15px rgba(138, 43, 226, 0.4);
+}
+
+/* El input va transparente encima del ghost */
 .hero-search #search {
     position: relative;
-    z-index: 10;
-    background: rgba(26, 26, 26, 0.85);
+    z-index: 2;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    width: 100%;
 }
 
 .search-ghost {
@@ -878,23 +897,22 @@ footer {
     padding: 1.1rem 1.8rem;
     font-size: 1.05rem;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    line-height: normal;
     pointer-events: none;
     white-space: nowrap;
     overflow: hidden;
-    z-index: 9;
+    z-index: 1;
     box-sizing: border-box;
     display: flex;
     align-items: center;
+    border-radius: 25px;
 }
 
-/* La parte ya escrita se oculta exactamente igual que en el input */
 .ghost-typed {
     color: transparent;
     white-space: pre;
 }
 
 .ghost-rest {
-    color: rgba(255, 255, 255, 0.35);
+    color: rgba(255, 255, 255, 0.38);
     white-space: pre;
 }

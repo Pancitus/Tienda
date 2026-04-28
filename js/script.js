@@ -111,21 +111,24 @@ function getGhostEl() {
 function mostrarAutocomplete(sugerencias) {
     const ghost = getGhostEl();
     const rawVal = searchInput.value;
-    if (!sugerencias.length || !rawVal) {
-        ocultarAutocomplete();
-        return;
-    }
-    // Solo sugerencias que empiecen con lo que ya escribió (case-insensitive)
-    const match = sugerencias.find(s => s.tipo === 'producto' &&
-        normalizar(s.texto).startsWith(normalizar(rawVal)));
+    if (!sugerencias.length || !rawVal) { ocultarAutocomplete(); return; }
+
+    // Buscar producto cuyo nombre normalizado empiece con lo escrito
+    const match = sugerencias.find(s =>
+        s.tipo === 'producto' && normalizar(s.texto).startsWith(normalizar(rawVal))
+    );
     if (!match) { ocultarAutocomplete(); return; }
 
     currentSuggestion = match.texto;
-    // La parte ya escrita en transparente (ocupa espacio) + resto en gris
-    const typed = rawVal;
-    const rest  = match.texto.slice(typed.length);
-    ghost.innerHTML = '<span class="ghost-typed">' + typed + '</span>'
-                    + '<span class="ghost-rest">' + rest + '</span>';
+
+    // El "resto" es la parte del nombre original después de los chars ya escritos
+    const rest = match.texto.slice(rawVal.length);
+    if (!rest) { ocultarAutocomplete(); return; } // ya escribió todo
+
+    // Ghost: parte escrita invisible (para empujar el texto) + sufijo gris
+    ghost.innerHTML =
+        '<span class="ghost-typed">' + rawVal + '</span>' +
+        '<span class="ghost-rest">' + rest + '</span>';
 }
 
 function ocultarAutocomplete() {
