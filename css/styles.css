@@ -862,7 +862,9 @@ footer {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    left: 1.8rem;
+    left: 0;
+    padding: 0 1.8rem;
+    width: 100%;
     font-size: 1.05rem;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: rgba(255,255,255,0.32);
@@ -870,6 +872,7 @@ footer {
     white-space: nowrap;
     overflow: hidden;
     z-index: 0;
+    box-sizing: border-box;
 }
 
 /* Input transparente para que el ghost sea visible debajo */
