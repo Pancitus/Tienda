@@ -300,7 +300,10 @@ async function fetchCsv(url) {
         if (!precio || precio === '$') precio = '$0';
 
         const descripcion = descripcionRaw || `${name} - Categoría: ${categoryRaw}`;
-        const category    = normalizar(categoryRaw);
+        const esOferta    = normalizar(descripcionRaw).includes('oferta') || normalizar(categoryRaw).includes('oferta');
+        const category    = esOferta && !normalizar(categoryRaw).includes('oferta')
+            ? normalizar(categoryRaw) + ' ofertas'
+            : normalizar(categoryRaw);
         const imgUrl = extractUrlFromFormula(imageCell);
 
         // Imágenes extra: cols[7], cols[8], cols[9]...
@@ -320,7 +323,8 @@ async function fetchCsv(url) {
                 url:      allUrls[0],
                 urls:     allUrls,
                 cantidad: parseInt(cantidad) || 0,
-                precio, descripcion
+                precio, descripcion,
+                esOferta
             });
         }
     }
@@ -358,6 +362,14 @@ function syncCards(newItems) {
             const img = document.createElement('img');
             img.src = item.url; img.loading = 'lazy'; img.alt = item.name;
             img.onerror = () => img.style.opacity = '0.3';
+
+            // Badge de oferta
+            if (item.esOferta) {
+                const badge = document.createElement('div');
+                badge.className = 'oferta-badge';
+                badge.innerHTML = '<img src="https://cdn-icons-png.flaticon.com/512/1170/1170678.png" alt="Oferta"> Oferta';
+                card.appendChild(badge);
+            }
 
             const info = document.createElement('div');
             info.className = 'producto-info';
