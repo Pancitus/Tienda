@@ -472,7 +472,7 @@ function openProductModal(item) {
                 <div class="modal-stock">${stockStatus}</div>
                 <div class="modal-description">
                     <h3>Descripción del Producto</h3>
-                    <p>${item.descripcion}</p>
+                    <p>${item.descripcion.replace(/\n/g, '<br>')}</p>
                 </div>
                 <div class="modal-actions">
                     <a href="${whatsappUrl}" class="btn-whatsapp" target="_blank" rel="noopener">
