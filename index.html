@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> J.A.K Home & Tech  - Calidad y los mejores precios</title>
+    <title>J.A.K Home & Tech - Calidad y los mejores precios</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
     <header>
         <nav>
             <div class="nav-left">
-                <div class="menu-toggle" onclick="openCategorias(event)">
+                <!-- Hamburguesa: solo visible en móvil (CSS lo controla) -->
+                <div class="menu-toggle" onclick="openCategorias(event)" aria-label="Abrir categorías">
                     <span></span>
                     <span></span>
                     <span></span>
@@ -25,7 +26,7 @@
                         <circle cx="67" cy="33" r="1" fill="#8a2be2" class="pulse"/>
                         <circle cx="33" cy="60" r="1" fill="#00d4ff" class="pulse"/>
                     </svg>
-                    <span> J.A.K Home & Tech </span>
+                    <span>J.A.K Home &amp; Tech</span>
                 </a>
             </div>
             <ul class="nav-links" id="navLinks">
@@ -36,29 +37,25 @@
         </nav>
     </header>
 
-    <!-- Overlay y Sidebar de Categorías -->
+    <!-- Overlay y Sidebar de Categorías (solo activo en móvil) -->
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeCategorias()"></div>
-    
+
     <div class="categorias-sidebar" id="categoriasSidebar">
         <div class="sidebar-header">
             <div class="sidebar-header-top">
                 <div class="sidebar-title">Categorías</div>
-                <button class="sidebar-close" onclick="closeCategorias()">✕</button>
+                <button class="sidebar-close" onclick="closeCategorias()" aria-label="Cerrar">✕</button>
             </div>
-            
-           <!-- BUSCADOR -->
+            <!-- Buscador del sidebar (ID único) -->
             <div class="search-container">
-                <input type="text" id="search" placeholder="🔍 Buscar productos por nombre..." />
+                <input type="text" id="sidebar-search" placeholder="🔍 Buscar productos por nombre..." oninput="filterBySearch()" />
             </div>
         </div>
-        
+
         <div class="categorias-container">
             <div class="categoria-item">
                 <div class="categoria-header" onclick="toggleCategoria(this)">
-                    <div class="categoria-titulo">
-                        <span class="categoria-icon">⚡</span>
-                        <span>Electrónicos</span>
-                    </div>
+                    <div class="categoria-titulo"><span class="categoria-icon">⚡</span><span>Electrónicos</span></div>
                     <span class="categoria-flecha">▼</span>
                 </div>
                 <div class="categoria-contenido">
@@ -70,10 +67,7 @@
 
             <div class="categoria-item">
                 <div class="categoria-header" onclick="toggleCategoria(this)">
-                    <div class="categoria-titulo">
-                        <span class="categoria-icon">🏠</span>
-                        <span>Muebles</span>
-                    </div>
+                    <div class="categoria-titulo"><span class="categoria-icon">🏠</span><span>Muebles</span></div>
                     <span class="categoria-flecha">▼</span>
                 </div>
                 <div class="categoria-contenido">
@@ -85,10 +79,7 @@
 
             <div class="categoria-item">
                 <div class="categoria-header" onclick="toggleCategoria(this)">
-                    <div class="categoria-titulo">
-                        <span class="categoria-icon">👔</span>
-                        <span>Accesorios</span>
-                    </div>
+                    <div class="categoria-titulo"><span class="categoria-icon">👔</span><span>Accesorios</span></div>
                     <span class="categoria-flecha">▼</span>
                 </div>
                 <div class="categoria-contenido">
@@ -100,10 +91,7 @@
 
             <div class="categoria-item">
                 <div class="categoria-header" onclick="toggleCategoria(this)">
-                    <div class="categoria-titulo">
-                        <span class="categoria-icon">🛍️</span>
-                        <span>Suministros</span>
-                    </div>
+                    <div class="categoria-titulo"><span class="categoria-icon">🛍️</span><span>Suministros</span></div>
                     <span class="categoria-flecha">▼</span>
                 </div>
                 <div class="categoria-contenido">
@@ -115,10 +103,7 @@
 
             <div class="categoria-item">
                 <div class="categoria-header" onclick="toggleCategoria(this)">
-                    <div class="categoria-titulo">
-                        <span class="categoria-icon">🔄</span>
-                        <span>Todos los Productos</span>
-                    </div>
+                    <div class="categoria-titulo"><span class="categoria-icon">🔄</span><span>Todos los Productos</span></div>
                     <span class="categoria-flecha">▼</span>
                 </div>
                 <div class="categoria-contenido">
@@ -140,46 +125,72 @@
         <circle cx="100" cy="180" r="3" fill="#00d4ff" class="pulse"/>
     </svg>
 
+    <!-- HERO -->
     <section class="hero" id="tienda">
-        <h1>Bienvenido a J.A.K Home & Tech </h1>
+        <h1>Bienvenido a J.A.K Home &amp; Tech</h1>
         <p>Calidad, estilo y los mejores precios en un solo lugar</p>
+        <div class="search-container hero-search">
+            <input type="text" id="search" placeholder="🔍 Buscar productos..." />
+        </div>
     </section>
 
+    <!-- FILTROS DE CATEGORÍA (solo visible en desktop) -->
+    <div class="desktop-filters" id="desktop-filters">
+        <div class="desktop-filters-inner">
+            <button class="filter-pill active" data-category="" onclick="setDesktopFilter(this, '')">
+                🔄 Todos
+            </button>
+            <button class="filter-pill" data-category="electronicos" onclick="setDesktopFilter(this, 'electronicos')">
+                ⚡ Electrónicos
+            </button>
+            <button class="filter-pill" data-category="muebles" onclick="setDesktopFilter(this, 'muebles')">
+                🏠 Muebles
+            </button>
+            <button class="filter-pill" data-category="accesorios" onclick="setDesktopFilter(this, 'accesorios')">
+                👔 Accesorios
+            </button>
+            <button class="filter-pill" data-category="suministros" onclick="setDesktopFilter(this, 'suministros')">
+                🛍️ Suministros
+            </button>
+        </div>
+    </div>
+
+    <!-- PRODUCTOS -->
     <section class="productos" id="productos">
         <div class="productos-grid" id="productos-grid">
             <!-- Los productos se cargarán automáticamente -->
         </div>
     </section>
 
+    <!-- CONTACTO -->
     <section class="contacto" id="contacto">
         <h2>¿Necesitas más información?</h2>
-        <p>Nuestro chatbot está disponible para ayudarte con cualquier consulta</p>
-        <a href="https://wa.me/593963426407?text=Hola,%20necesito%20información%20sobre%20sus%20productos" class="contacto-btn" target="_blank">Contactar por WhatsApp</a>
+        <p>Nuestro equipo está disponible para ayudarte con cualquier consulta</p>
+        <a href="https://wa.me/593963426407?text=Hola,%20necesito%20información%20sobre%20sus%20productos" class="contacto-btn" target="_blank" rel="noopener">Contactar por WhatsApp</a>
     </section>
 
+    <!-- REDES SOCIALES -->
     <section class="redes-sociales">
         <h2>Síguenos en Redes Sociales</h2>
         <div class="social-buttons">
-            <a href="https://instagram.com/tu_usuario" class="social-btn instagram" target="_blank">
-                <span class="social-icon">📷</span>
-                <span>Instagram</span>
+            <a href="https://instagram.com/tu_usuario" class="social-btn instagram" target="_blank" rel="noopener">
+                <span class="social-icon">📷</span><span>Instagram</span>
             </a>
-            <a href="https://facebook.com/tu_pagina" class="social-btn facebook" target="_blank">
-                <span class="social-icon">📘</span>
-                <span>Facebook</span>
+            <a href="https://facebook.com/tu_pagina" class="social-btn facebook" target="_blank" rel="noopener">
+                <span class="social-icon">📘</span><span>Facebook</span>
             </a>
-            <a href="tiktok.com/@tiendaonlinedetodounpoco" class="social-btn tiktok" target="_blank">
-                <span class="social-icon">🎵</span>
-                <span>TikTok</span>
+            <a href="https://tiktok.com/@tiendaonlinedetodounpoco" class="social-btn tiktok" target="_blank" rel="noopener">
+                <span class="social-icon">🎵</span><span>TikTok</span>
             </a>
         </div>
     </section>
 
     <footer>
-        <p>&copy; 2025 Tienda KJ. Todos los derechos reservados.</p>
+        <p>&copy; 2025 J.A.K Home &amp; Tech. Todos los derechos reservados.</p>
     </footer>
 
-    <a href="https://wa.me/593963426407?text=Hola,%20necesito%20información" class="whatsapp-btn" target="_blank" title="Chatea con nosotros">💬</a>
+    <!-- Botón flotante WhatsApp -->
+    <a href="https://wa.me/593963426407?text=Hola,%20necesito%20información" class="whatsapp-btn" target="_blank" rel="noopener" title="Chatea con nosotros">💬</a>
 
     <script src="js/script.js"></script>
 </body>
