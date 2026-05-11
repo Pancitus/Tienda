@@ -8,7 +8,18 @@
     <meta name="theme-color" content="#8a2be2">
     <title>J.A.K Home & Tech - Calidad y los mejores precios</title>
     <link rel="stylesheet" href="css/styles.css">
-    <style>html,body{overflow-x:hidden;} .hero{overflow:hidden;}</style>
+    <style>
+        html,body{overflow-x:hidden;}
+        .hero{overflow:hidden;}
+        .hero-logo {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            margin-bottom: 1.5rem;
+            filter: drop-shadow(0 0 20px rgba(138, 43, 226, 0.6));
+            animation: fadeInDown 1s ease-out;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -45,6 +56,7 @@
 
     <!-- HERO -->
     <section class="hero" id="tienda">
+        <img src="imagenes/LOGO.png" alt="J.A.K Home & Tech" class="hero-logo">
         <h1>Bienvenido a J.A.K Home &amp; Tech</h1>
         <p>Calidad, estilo y los mejores precios en un solo lugar</p>
         <div class="search-container hero-search">
