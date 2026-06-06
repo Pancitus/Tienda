@@ -1,6 +1,6 @@
 // ===================== CONFIGURACIÓN =====================
 const CSV_URL       = 'https://docs.google.com/spreadsheets/d/1ApjOy0d0sTGOwFQNPif-bgbyzJVVidPAPtDYhp4tYuw/export?format=csv&gid=625925071';
-const UPDATE_INTERVAL = 5000;
+const UPDATE_INTERVAL = 2 * 60 * 1000; // 2 minutos
 const MAX_HISTORIAL   = 6;
 
 // ===================== ESTADO =====================
@@ -388,6 +388,11 @@ async function fetchCsv(url) {
 
 // ===================== SINCRONIZACIÓN DE CARDS =====================
 function syncCards(newItems) {
+    // ── Evitar re-render si los datos no cambiaron ──
+    const newHash = JSON.stringify(newItems.map(i => i.id + i.precio + i.cantidad + i.esOferta));
+    if (newHash === syncCards._lastHash) return; // nada cambió, no tocar el DOM
+    syncCards._lastHash = newHash;
+
     allItems = newItems.slice(); // actualiza cache para autocomplete
 
     newItems.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
