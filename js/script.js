@@ -311,22 +311,59 @@ async function fetchCsv(url) {
         const precioRaw      = c(cols[4]) || '0';
         const descripcionRaw = c(cols[5]);
         const imageCell      = c(cols[6]);
+        // cols[7] en adelante pueden ser imágenes extra O fecha_oferta
+        // Buscamos fecha_oferta: celda que coincide con formato fecha (dd/mm/yyyy o yyyy-mm-dd)
+        let fechaOfertaRaw = '';
+        const extraCols = [];
+        for (let ci = 7; ci < cols.length; ci++) {
+            const val = c(cols[ci]);
+            if (!fechaOfertaRaw && /^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}$|^\d{4}[\/\-]\d{2}[\/\-]\d{2}$/.test(val)) {
+                fechaOfertaRaw = val;
+            } else {
+                extraCols.push({ index: ci, val });
+            }
+        }
 
         let precio = precioRaw;
         if (precio && !precio.includes('$')) precio = '$' + precio;
         if (!precio || precio === '$') precio = '$0';
 
         const descripcion = descripcionRaw || `${name} - Categoría: ${categoryRaw}`;
-        const esOferta    = normalizar(descripcionRaw).includes('oferta') || normalizar(categoryRaw).includes('oferta');
+        let esOferta    = normalizar(descripcionRaw).includes('oferta') || normalizar(categoryRaw).includes('oferta');
+
+        // ── LÓGICA DE EXPIRACIÓN DE OFERTAS (7 días) ──────────────────────
+        // Si hay fecha_oferta en el sheet se usa esa fecha de inicio.
+        // Si NO hay fecha, se asume HOY como inicio → expira en 7 días desde hoy.
+        if (esOferta) {
+            if (!fechaOfertaRaw) {
+                const hoy = new Date();
+                fechaOfertaRaw = `${hoy.getDate()}/${hoy.getMonth()+1}/${hoy.getFullYear()}`;
+            }
+            let fechaOferta = null;
+            const partes = fechaOfertaRaw.split(/[\/\-]/);
+            if (partes.length === 3) {
+                fechaOferta = partes[0].length === 4
+                    ? new Date(+partes[0], +partes[1] - 1, +partes[2])   // yyyy-mm-dd
+                    : new Date(+partes[2], +partes[1] - 1, +partes[0]);  // dd/mm/yyyy
+            }
+            if (fechaOferta && !isNaN(fechaOferta)) {
+                const diasPasados = (Date.now() - fechaOferta.getTime()) / (1000 * 60 * 60 * 24);
+                if (diasPasados > 7) {
+                    esOferta = false; // expirada: ya no aparece en Ofertas
+                }
+            }
+        }
+
         const category    = esOferta && !normalizar(categoryRaw).includes('oferta')
             ? normalizar(categoryRaw) + ' ofertas'
             : normalizar(categoryRaw);
         const imgUrl = extractUrlFromFormula(imageCell);
 
-        // Imágenes extra: cols[7], cols[8], cols[9]...
+        // Imágenes extra: cols[7]+ (excluyendo la columna fecha_oferta si existe)
         const extraUrls = [];
-        for (let ci = 7; ci < cols.length; ci++) {
-            const extra = extractUrlFromFormula(c(cols[ci]));
+        const imgCell6 = c(cols[6]); // col principal de imagen
+        for (const { val } of extraCols) {
+            const extra = extractUrlFromFormula(val);
             if (extra) extraUrls.push(normalizeDriveUrl(extra));
         }
 
@@ -341,7 +378,8 @@ async function fetchCsv(url) {
                 urls:     allUrls,
                 cantidad: parseInt(cantidad) || 0,
                 precio, descripcion,
-                esOferta
+                esOferta,
+                fechaOferta: fechaOfertaRaw || null
             });
         }
     }
@@ -380,11 +418,32 @@ function syncCards(newItems) {
             img.src = item.url; img.loading = 'lazy'; img.alt = item.name;
             img.onerror = () => img.style.opacity = '0.3';
 
-            // Badge de oferta
+            // Badge de oferta con días restantes
             if (item.esOferta) {
                 const badge = document.createElement('div');
                 badge.className = 'oferta-badge';
-                badge.innerHTML = `<svg viewBox="0 0 24 24" fill="white" width="16" height="16" style="flex-shrink:0"><path d="M21.41 11.58l-9-9A2 2 0 0 0 11 2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 .59 1.42l9 9A2 2 0 0 0 13 22a2 2 0 0 0 1.41-.59l7-7A2 2 0 0 0 22 13a2 2 0 0 0-.59-1.42zM6.5 8A1.5 1.5 0 1 1 8 6.5 1.5 1.5 0 0 1 6.5 8z"/></svg> Oferta`;
+
+                let diasRestantesHTML = '';
+                if (item.fechaOferta) {
+                    const partes = item.fechaOferta.split(/[\/\-]/);
+                    let fechaInicio = null;
+                    if (partes.length === 3) {
+                        fechaInicio = partes[0].length === 4
+                            ? new Date(+partes[0], +partes[1]-1, +partes[2])
+                            : new Date(+partes[2], +partes[1]-1, +partes[0]);
+                    }
+                    if (fechaInicio && !isNaN(fechaInicio)) {
+                        const diasPasados = (Date.now() - fechaInicio.getTime()) / (1000*60*60*24);
+                        const restantes = Math.max(0, Math.ceil(7 - diasPasados));
+                        if (restantes <= 3 && restantes > 0) {
+                            diasRestantesHTML = `<span class="oferta-expira">⏳ ${restantes}d</span>`;
+                        } else if (restantes > 3) {
+                            diasRestantesHTML = `<span class="oferta-expira-ok">🏷️ ${restantes}d</span>`;
+                        }
+                    }
+                }
+
+                badge.innerHTML = `<svg viewBox="0 0 24 24" fill="white" width="16" height="16" style="flex-shrink:0"><path d="M21.41 11.58l-9-9A2 2 0 0 0 11 2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 .59 1.42l9 9A2 2 0 0 0 13 22a2 2 0 0 0 1.41-.59l7-7A2 2 0 0 0 22 13a2 2 0 0 0-.59-1.42zM6.5 8A1.5 1.5 0 1 1 8 6.5 1.5 1.5 0 0 1 6.5 8z"/></svg> Oferta${diasRestantesHTML}`;
                 card.appendChild(badge);
             }
 
