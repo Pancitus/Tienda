@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Generador de Hash — J.A.K Admin</title>
+<style>
+  body { font-family: 'Segoe UI', sans-serif; background: #0a0a0a; color: #fff;
+         display: flex; align-items: center; justify-content: center;
+         min-height: 100vh; margin: 0; padding: 1rem; }
+  .box { background: #1a1a2e; border: 1px solid rgba(138,43,226,0.4);
+         border-radius: 16px; padding: 2rem; max-width: 520px; width: 100%; }
+  h1 { color: #8a2be2; font-size: 1.3rem; margin: 0 0 0.4rem; }
+  p  { color: #aaa; font-size: 0.85rem; margin: 0 0 1.5rem; }
+  label { font-size: 0.75rem; color: #888; text-transform: uppercase;
+          letter-spacing: 0.05em; display: block; margin-bottom: 5px; }
+  input { width: 100%; padding: 0.6rem 1rem; background: rgba(255,255,255,0.05);
+          border: 1.5px solid rgba(138,43,226,0.3); border-radius: 8px;
+          color: #fff; font-size: 0.95rem; outline: none; box-sizing: border-box;
+          margin-bottom: 1rem; font-family: inherit; }
+  input:focus { border-color: #8a2be2; }
+  button { width: 100%; padding: 0.7rem; background: linear-gradient(135deg,#8a2be2,#6a1bb2);
+           border: none; border-radius: 10px; color: #fff; font-size: 1rem;
+           font-weight: 600; cursor: pointer; margin-top: 0.3rem; }
+  button:hover { opacity: 0.85; }
+  .result { margin-top: 1.5rem; display: none; }
+  .result h2 { font-size: 0.9rem; color: #8a2be2; margin-bottom: 0.8rem; }
+  .hash-row { margin-bottom: 0.8rem; }
+  .hash-row label { color: #aaa; }
+  .hash-val { background: rgba(0,0,0,0.4); border: 1px solid rgba(138,43,226,0.25);
+              border-radius: 8px; padding: 0.5rem 0.8rem; font-family: monospace;
+              font-size: 0.75rem; color: #00d4ff; word-break: break-all;
+              cursor: pointer; transition: background 0.2s; }
+  .hash-val:hover { background: rgba(138,43,226,0.15); }
+  .copy-hint { font-size: 0.7rem; color: #555; margin-top: 3px; }
+  .instruct { background: rgba(138,43,226,0.07); border: 1px solid rgba(138,43,226,0.2);
+              border-radius: 10px; padding: 1rem; margin-top: 1.2rem; font-size: 0.8rem;
+              color: #ccc; line-height: 1.7; }
+  .instruct code { background: rgba(0,212,255,0.1); color: #00d4ff;
+                   padding: 1px 5px; border-radius: 4px; font-size: 0.78rem; }
+  .copied { color: #2ecc71 !important; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>🔐 Generador de Credenciales Admin</h1>
+  <p>J.A.K Home &amp; Tech — genera los hashes SHA-256 para tu <code>script.js</code></p>
+
+  <label>Usuario</label>
+  <input id="in-user" type="text" placeholder="Ej: jakadmin" />
+
+  <label>Contraseña</label>
+  <input id="in-pass" type="password" placeholder="Ej: MiClave@Segura2025!" />
+
+  <button onclick="generar()">Generar Hashes</button>
+
+  <div class="result" id="result">
+    <h2>📋 Copia estos valores en tu script.js</h2>
+    <div class="hash-row">
+      <label>ADMIN_HASH_USER</label>
+      <div class="hash-val" id="h-user" onclick="copiar('h-user')"></div>
+      <div class="copy-hint">Haz clic para copiar</div>
+    </div>
+    <div class="hash-row">
+      <label>ADMIN_HASH_PASS</label>
+      <div class="hash-val" id="h-pass" onclick="copiar('h-pass')"></div>
+      <div class="copy-hint">Haz clic para copiar</div>
+    </div>
+    <div class="instruct">
+      En <strong>script.js</strong>, reemplaza:<br>
+      <code>const ADMIN_HASH_USER = '...';</code><br>
+      <code>const ADMIN_HASH_PASS = '...';</code><br><br>
+      ⚠️ <strong>No compartas este archivo</strong> — úsalo solo localmente y ciérralo cuando termines.
+    </div>
+  </div>
+</div>
+
+<script>
+async function sha256(txt) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(txt));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function generar() {
+  const user = document.getElementById('in-user').value.trim();
+  const pass = document.getElementById('in-pass').value;
+  if (!user || !pass) { alert('Completa usuario y contraseña'); return; }
+  const [hu, hp] = await Promise.all([sha256(user), sha256(pass)]);
+  document.getElementById('h-user').textContent = hu;
+  document.getElementById('h-pass').textContent = hp;
+  document.getElementById('result').style.display = 'block';
+}
+
+function copiar(id) {
+  const el = document.getElementById(id);
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    el.classList.add('copied');
+    setTimeout(() => el.classList.remove('copied'), 1500);
+  });
+}
+</script>
+</body>
+</html>
