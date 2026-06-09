@@ -621,24 +621,54 @@ function injectAdminUI() {
                     <textarea id="af_desc" placeholder="Describe el producto..."></textarea>
                 </div>
                 <div class="af-full">
-                    <label>URL Imagen principal</label>
-                    <input id="af_img1" type="url" placeholder="https://...">
+                    <label>Imagen principal</label>
+                    <div class="af-img-row">
+                        <input id="af_img1" type="url" placeholder="https://... o usa 📁 para subir">
+                        <label class="af-upload-btn" title="Subir imagen desde tu PC">
+                            📁 <input type="file" accept="image/*" onchange="adminUploadImg(this,'af_img1')" hidden>
+                        </label>
+                        <img id="af_img1_prev" class="af-img-prev" src="" alt="" onclick="this.style.display='none'">
+                    </div>
                 </div>
                 <div>
                     <label>Imagen 2</label>
-                    <input id="af_img2" type="url" placeholder="https://...">
+                    <div class="af-img-row">
+                        <input id="af_img2" type="url" placeholder="https://...">
+                        <label class="af-upload-btn" title="Subir imagen">
+                            📁 <input type="file" accept="image/*" onchange="adminUploadImg(this,'af_img2')" hidden>
+                        </label>
+                        <img id="af_img2_prev" class="af-img-prev" src="" alt="" onclick="this.style.display='none'">
+                    </div>
                 </div>
                 <div>
                     <label>Imagen 3</label>
-                    <input id="af_img3" type="url" placeholder="https://...">
+                    <div class="af-img-row">
+                        <input id="af_img3" type="url" placeholder="https://...">
+                        <label class="af-upload-btn" title="Subir imagen">
+                            📁 <input type="file" accept="image/*" onchange="adminUploadImg(this,'af_img3')" hidden>
+                        </label>
+                        <img id="af_img3_prev" class="af-img-prev" src="" alt="" onclick="this.style.display='none'">
+                    </div>
                 </div>
                 <div>
                     <label>Imagen 4</label>
-                    <input id="af_img4" type="url" placeholder="https://...">
+                    <div class="af-img-row">
+                        <input id="af_img4" type="url" placeholder="https://...">
+                        <label class="af-upload-btn" title="Subir imagen">
+                            📁 <input type="file" accept="image/*" onchange="adminUploadImg(this,'af_img4')" hidden>
+                        </label>
+                        <img id="af_img4_prev" class="af-img-prev" src="" alt="" onclick="this.style.display='none'">
+                    </div>
                 </div>
                 <div>
                     <label>Imagen 5</label>
-                    <input id="af_img5" type="url" placeholder="https://...">
+                    <div class="af-img-row">
+                        <input id="af_img5" type="url" placeholder="https://...">
+                        <label class="af-upload-btn" title="Subir imagen">
+                            📁 <input type="file" accept="image/*" onchange="adminUploadImg(this,'af_img5')" hidden>
+                        </label>
+                        <img id="af_img5_prev" class="af-img-prev" src="" alt="" onclick="this.style.display='none'">
+                    </div>
                 </div>
             </div>
             <div class="admin-form-actions">
@@ -688,6 +718,8 @@ function adminOpenEditor(id) {
     btn.disabled = false;
     btn.textContent = '💾 Guardar';
 
+    clearImgPreviews();
+
     if (isNew) {
         ['af_item_id','af_id','af_nombre','af_precio','af_cantidad','af_desc',
          'af_img1','af_img2','af_img3','af_img4','af_img5'].forEach(i => {
@@ -708,6 +740,11 @@ function adminOpenEditor(id) {
         const imgs = p.urls || [];
         ['af_img1','af_img2','af_img3','af_img4','af_img5'].forEach((fid, i) => {
             document.getElementById(fid).value = imgs[i] || '';
+            // Mostrar preview de imagen existente
+            if (imgs[i]) {
+                const prev = document.getElementById(fid + '_prev');
+                if (prev) { prev.src = imgs[i]; prev.style.display = 'block'; }
+            }
         });
     }
     document.getElementById('admin-editor-modal').classList.add('open');
@@ -786,9 +823,59 @@ function adminToast(msg) {
     setTimeout(() => t.classList.remove('show'), 3000);
 }
 
+// ── Subir imagen a ImgBB ─────────────────────────────────
+const IMGBB_KEY = '634e5a5b7a6b4c9a8e1f2d3c4b5a6789'; // clave pública ImgBB
+
+async function adminUploadImg(input, targetId) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // Vista previa local inmediata
+    const reader = new FileReader();
+    reader.onload = ev => {
+        const prev = document.getElementById(targetId + '_prev');
+        if (prev) { prev.src = ev.target.result; prev.style.display = 'block'; }
+    };
+    reader.readAsDataURL(file);
+
+    adminToast('⏳ Subiendo imagen...');
+
+    try {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const res  = await fetch('https://api.imgbb.com/1/upload?key=' + IMGBB_KEY, {
+            method: 'POST', body: formData
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            const url = data.data.url;
+            document.getElementById(targetId).value = url;
+            // Actualizar preview con URL real
+            const prev = document.getElementById(targetId + '_prev');
+            if (prev) prev.src = url;
+            adminToast('✅ Imagen subida correctamente');
+        } else {
+            adminToast('❌ Error al subir: ' + (data.error?.message || 'intenta de nuevo'));
+        }
+    } catch (e) {
+        adminToast('❌ Error de conexión al subir imagen');
+    }
+
+    // Limpiar el input file para permitir subir el mismo archivo otra vez
+    input.value = '';
+}
+
+// Limpiar previews al abrir el editor
+function clearImgPreviews() {
+    ['af_img1','af_img2','af_img3','af_img4','af_img5'].forEach(id => {
+        const prev = document.getElementById(id + '_prev');
+        if (prev) { prev.src = ''; prev.style.display = 'none'; }
+    });
+}
+
 // ── Cerrar editor con Escape ─────────────────────────────
 document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-        adminCloseEditor();
-    }
+    if (e.key === 'Escape') adminCloseEditor();
 });
