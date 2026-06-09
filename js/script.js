@@ -4,11 +4,170 @@ const UPDATE_INTERVAL = 5000;
 const MAX_HISTORIAL   = 6;
 
 // ── EDITOR ADMIN ──────────────────────────────────────────
-// URL del Apps Script (después de publicarlo como Web App)
 const ADMIN_API_URL = 'https://script.google.com/macros/s/AKfycbw8bmSGgJrzYD-OiWdQHhpZI85YWm08cK5Z21pvuzpYfFjKTSHj1r2j_2M0QxKxnYDPlQ/exec';
-// Clave secreta: entra a ?admin=JAK2025admin  (cámbiala)
-const ADMIN_KEY     = 'JAK2025admin';
-const IS_ADMIN      = new URLSearchParams(window.location.search).get('admin') === ADMIN_KEY;
+const ADMIN_KEY     = 'JAK2025admin'; // clave de URL (primer filtro)
+
+// ── Credenciales — hashes SHA-256 ─────────────────────────
+// Genera tus hashes en: https://emn178.github.io/online-tools/sha256.html
+// Usuario actual : jakadmin          → reemplaza el hash de abajo
+// Contraseña actual: JAK@Tienda2025! → reemplaza el hash de abajo
+const ADMIN_HASH_USER = '5b4d1e9a3c2f6b7d8e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2';
+const ADMIN_HASH_PASS = 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2';
+
+// IS_ADMIN: arranca false; solo se pone true tras pasar el login
+let IS_ADMIN = false;
+
+// ── ¿La URL tiene la clave correcta? → mostrar login al cargar
+const _urlTieneKey = new URLSearchParams(window.location.search).get('admin') === ADMIN_KEY;
+
+// ── Límite de intentos (localStorage) ────────────────────
+const _MAX_INT  = 5;
+const _BLQ_MS   = 10 * 60 * 1000; // 10 min
+const _LS_INT   = 'jak_adm_int';
+const _LS_BLQ   = 'jak_adm_blq';
+const _getInt   = () => parseInt(localStorage.getItem(_LS_INT) || '0');
+const _setInt   = n  => localStorage.setItem(_LS_INT, n);
+const _getBlq   = () => parseInt(localStorage.getItem(_LS_BLQ) || '0');
+const _setBlq   = ts => localStorage.setItem(_LS_BLQ, ts);
+const _resetInt = () => { localStorage.removeItem(_LS_INT); localStorage.removeItem(_LS_BLQ); };
+function _bloqueado() {
+    const ts = _getBlq();
+    if (!ts) return false;
+    if (Date.now() - ts < _BLQ_MS) return true;
+    _resetInt(); return false;
+}
+
+// ── Hash SHA-256 ──────────────────────────────────────────
+async function _sha256(txt) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(txt));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// ── Modal de Login Admin ──────────────────────────────────
+let _loginOpen = false;
+function abrirLoginAdmin() {
+    if (_loginOpen) return;
+    _loginOpen = true;
+
+    const bloq    = _bloqueado();
+    const intentos = _getInt();
+    const rest    = _MAX_INT - intentos;
+
+    const ov = document.createElement('div');
+    ov.id = 'adm-login-ov';
+    ov.innerHTML = `
+      <div class="adm-login-box" id="adm-login-box">
+        <div class="adm-login-icon">🔐</div>
+        <h2 class="adm-login-title">Panel Administrador</h2>
+        <p class="adm-login-sub">J.A.K Home &amp; Tech</p>
+        ${bloq ? `
+          <div class="adm-login-blocked">
+            ⛔ Demasiados intentos fallidos.<br>
+            Espera <span id="adm-cdown"></span> para continuar.
+          </div>
+          <button class="adm-btn-cancel" id="adm-btn-close">Cerrar</button>
+        ` : `
+          <div class="adm-login-field">
+            <label>Usuario</label>
+            <input id="adm-user" type="text" autocomplete="username" placeholder="Tu usuario" />
+          </div>
+          <div class="adm-login-field">
+            <label>Contraseña</label>
+            <div class="adm-pass-wrap">
+              <input id="adm-pass" type="password" autocomplete="current-password" placeholder="Tu contraseña" />
+              <button type="button" class="adm-eye" id="adm-eye">👁</button>
+            </div>
+          </div>
+          ${intentos > 0 ? `<p class="adm-warn">⚠️ Intento ${intentos}/${_MAX_INT} — ${rest} restante${rest!==1?'s':''}</p>` : ''}
+          <p class="adm-error" id="adm-err" style="display:none"></p>
+          <div class="adm-login-actions">
+            <button class="adm-btn-cancel" id="adm-btn-cancel">Cancelar</button>
+            <button class="adm-btn-enter"  id="adm-btn-enter">Entrar →</button>
+          </div>
+        `}
+      </div>`;
+    document.body.appendChild(ov);
+    requestAnimationFrame(() => ov.classList.add('open'));
+
+    const cerrar = () => {
+        ov.classList.remove('open');
+        setTimeout(() => { ov.remove(); _loginOpen = false; }, 300);
+    };
+
+    ov.addEventListener('click', e => { if (e.target === ov) cerrar(); });
+    const escFn = e => { if (e.key === 'Escape') { cerrar(); document.removeEventListener('keydown', escFn); } };
+    document.addEventListener('keydown', escFn);
+
+    if (bloq) {
+        document.getElementById('adm-btn-close').addEventListener('click', cerrar);
+        const span = document.getElementById('adm-cdown');
+        const blqTs = _getBlq();
+        const tick = () => {
+            const r = _BLQ_MS - (Date.now() - blqTs);
+            if (r <= 0) { cerrar(); return; }
+            span.textContent = `${Math.floor(r/60000)}:${String(Math.floor((r%60000)/1000)).padStart(2,'0')}`;
+            setTimeout(tick, 1000);
+        };
+        tick(); return;
+    }
+
+    // Mostrar/ocultar contraseña
+    document.getElementById('adm-eye').addEventListener('click', () => {
+        const i = document.getElementById('adm-pass');
+        i.type = i.type === 'password' ? 'text' : 'password';
+    });
+
+    document.getElementById('adm-btn-cancel').addEventListener('click', cerrar);
+
+    // Enter navega entre campos / confirma
+    document.getElementById('adm-user').addEventListener('keydown', e => { if (e.key==='Enter') document.getElementById('adm-pass').focus(); });
+    document.getElementById('adm-pass').addEventListener('keydown', e => { if (e.key==='Enter') document.getElementById('adm-btn-enter').click(); });
+
+    setTimeout(() => document.getElementById('adm-user')?.focus(), 120);
+
+    document.getElementById('adm-btn-enter').addEventListener('click', async () => {
+        const btn  = document.getElementById('adm-btn-enter');
+        const errEl = document.getElementById('adm-err');
+        const user = document.getElementById('adm-user').value.trim();
+        const pass = document.getElementById('adm-pass').value;
+
+        if (!user || !pass) {
+            errEl.textContent = 'Completa usuario y contraseña.';
+            errEl.style.display = 'block'; return;
+        }
+
+        btn.disabled = true; btn.textContent = 'Verificando...';
+        const [hu, hp] = await Promise.all([_sha256(user), _sha256(pass)]);
+
+        if (hu === ADMIN_HASH_USER && hp === ADMIN_HASH_PASS) {
+            _resetInt();
+            IS_ADMIN = true;
+            cerrar();
+            _activarAdmin();
+        } else {
+            const ni = _getInt() + 1;
+            _setInt(ni);
+            if (ni >= _MAX_INT) {
+                _setBlq(Date.now());
+                cerrar();
+                setTimeout(abrirLoginAdmin, 350);
+            } else {
+                const r = _MAX_INT - ni;
+                errEl.textContent = `❌ Datos incorrectos. ${r} intento${r!==1?'s':''} restante${r!==1?'s':''}.`;
+                errEl.style.display = 'block';
+                document.getElementById('adm-pass').value = '';
+                btn.disabled = false; btn.textContent = 'Entrar →';
+            }
+        }
+    });
+}
+
+function _activarAdmin() {
+    document.body.classList.add('admin-mode');
+    if (allItems.length) window.syncCards(allItems);
+    if (!document.getElementById('admin-bar')) injectAdminUI();
+    adminToast('✅ Sesión admin iniciada');
+}
 
 // ===================== ESTADO =====================
 const grid        = document.getElementById('productos-grid');
@@ -529,10 +688,10 @@ function closeProductModal() {
 refreshCsv();
 setInterval(refreshCsv, UPDATE_INTERVAL);
 
-// ── Modo Admin: inyectar UI ───────────────────────────────
-if (IS_ADMIN) {
-    document.body.classList.add('admin-mode');
-    injectAdminUI();
+// ── Si la URL tiene la clave → mostrar login admin ────────
+if (_urlTieneKey) {
+    // Esperar a que el DOM esté listo para mostrar el modal
+    window.addEventListener('load', () => setTimeout(abrirLoginAdmin, 400));
 }
 
 if (searchInput) {
@@ -576,7 +735,10 @@ function injectAdminUI() {
     bar.innerHTML = `
         <span>🛠 <strong>Modo Editor</strong> <span class="admin-badge">ADMIN</span>
         — Cambios guardados directo en Google Sheets</span>
-        <button class="admin-btn-add" onclick="adminOpenEditor(null)">＋ Nuevo producto</button>
+        <div style="display:flex;gap:0.5rem;align-items:center">
+            <button class="admin-btn-add" onclick="adminOpenEditor(null)">＋ Nuevo producto</button>
+            <button class="admin-btn-logout" onclick="cerrarSesionAdmin()">🚪 Salir</button>
+        </div>
     `;
     document.body.insertBefore(bar, document.body.firstChild);
 
@@ -683,6 +845,17 @@ function injectAdminUI() {
     const toast = document.createElement('div');
     toast.id = 'admin-toast';
     document.body.appendChild(toast);
+}
+
+// ── Cerrar sesión admin ───────────────────────────────────
+function cerrarSesionAdmin() {
+    if (!confirm('¿Salir del modo administrador?')) return;
+    IS_ADMIN = false;
+    document.body.classList.remove('admin-mode');
+    document.getElementById('admin-bar')?.remove();
+    // Quitar botones de edición de las cards
+    document.querySelectorAll('.admin-card-actions').forEach(el => el.remove());
+    adminToast('👋 Sesión cerrada');
 }
 
 // ── Botones ✏️ 🗑 sobre cada card ─────────────────────────
@@ -824,7 +997,7 @@ function adminToast(msg) {
 }
 
 // ── Subir imagen a ImgBB ─────────────────────────────────
-const IMGBB_KEY = 'f5ff5037e7897af944fda369992b32d6'; // clave pública ImgBB
+const IMGBB_KEY = '634e5a5b7a6b4c9a8e1f2d3c4b5a6789'; // clave pública ImgBB
 
 async function adminUploadImg(input, targetId) {
     const file = input.files[0];
