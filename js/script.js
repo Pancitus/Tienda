@@ -5,7 +5,7 @@ const MAX_HISTORIAL   = 6;
 
 // ── EDITOR ADMIN ──────────────────────────────────────────
 // URL del Apps Script (después de publicarlo como Web App)
-const ADMIN_API_URL = 'https://script.google.com/macros/s/AKfycbyjGYw8P-9x1TQeMi-Wz7sIeMUzk1VDkUG8pV7oj1rZ1ihuP8dV0NW8CjdLB2H90pb5IQ/exec';
+const ADMIN_API_URL = 'https://script.google.com/macros/s/AKfycbw8bmSGgJrzYD-OiWdQHhpZI85YWm08cK5Z21pvuzpYfFjKTSHj1r2j_2M0QxKxnYDPlQ/exec';
 // Clave secreta: entra a ?admin=JAK2025admin  (cámbiala)
 const ADMIN_KEY     = 'JAK2025admin';
 const IS_ADMIN      = new URLSearchParams(window.location.search).get('admin') === ADMIN_KEY;
