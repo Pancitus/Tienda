@@ -1,7 +1,14 @@
 // ===================== CONFIGURACIÓN =====================
-const CSV_URL       = 'https://docs.google.com/spreadsheets/d/1ApjOy0d0sTGOwFQNPif-bgbyzJVVidPAPtDYhp4tYuw/export?format=csv&gid=625925071';
-const UPDATE_INTERVAL = 2 * 60 * 1000; // 2 minutos
+const CSV_URL         = 'https://docs.google.com/spreadsheets/d/1ApjOy0d0sTGOwFQNPif-bgbyzJVVidPAPtDYhp4tYuw/export?format=csv&gid=625925071';
+const UPDATE_INTERVAL = 5000;
 const MAX_HISTORIAL   = 6;
+
+// ── EDITOR ADMIN ──────────────────────────────────────────
+// URL del Apps Script (después de publicarlo como Web App)
+const ADMIN_API_URL = 'https://script.google.com/macros/s/AKfycbwpZg12gZ4GIFTYm9uQkZxtNpZPoEQwBKFHOA5XgkdkwnTjfJlWVoOyDMedjXaOWyd7XQ/exec';
+// Clave secreta: entra a ?admin=JAK2025admin  (cámbiala)
+const ADMIN_KEY     = 'JAK2025admin';
+const IS_ADMIN      = new URLSearchParams(window.location.search).get('admin') === ADMIN_KEY;
 
 // ===================== ESTADO =====================
 const grid        = document.getElementById('productos-grid');
@@ -311,59 +318,22 @@ async function fetchCsv(url) {
         const precioRaw      = c(cols[4]) || '0';
         const descripcionRaw = c(cols[5]);
         const imageCell      = c(cols[6]);
-        // cols[7] en adelante pueden ser imágenes extra O fecha_oferta
-        // Buscamos fecha_oferta: celda que coincide con formato fecha (dd/mm/yyyy o yyyy-mm-dd)
-        let fechaOfertaRaw = '';
-        const extraCols = [];
-        for (let ci = 7; ci < cols.length; ci++) {
-            const val = c(cols[ci]);
-            if (!fechaOfertaRaw && /^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}$|^\d{4}[\/\-]\d{2}[\/\-]\d{2}$/.test(val)) {
-                fechaOfertaRaw = val;
-            } else {
-                extraCols.push({ index: ci, val });
-            }
-        }
 
         let precio = precioRaw;
         if (precio && !precio.includes('$')) precio = '$' + precio;
         if (!precio || precio === '$') precio = '$0';
 
         const descripcion = descripcionRaw || `${name} - Categoría: ${categoryRaw}`;
-        let esOferta    = normalizar(descripcionRaw).includes('oferta') || normalizar(categoryRaw).includes('oferta');
-
-        // ── LÓGICA DE EXPIRACIÓN DE OFERTAS (7 días) ──────────────────────
-        // Si hay fecha_oferta en el sheet se usa esa fecha de inicio.
-        // Si NO hay fecha, se asume HOY como inicio → expira en 7 días desde hoy.
-        if (esOferta) {
-            if (!fechaOfertaRaw) {
-                const hoy = new Date();
-                fechaOfertaRaw = `${hoy.getDate()}/${hoy.getMonth()+1}/${hoy.getFullYear()}`;
-            }
-            let fechaOferta = null;
-            const partes = fechaOfertaRaw.split(/[\/\-]/);
-            if (partes.length === 3) {
-                fechaOferta = partes[0].length === 4
-                    ? new Date(+partes[0], +partes[1] - 1, +partes[2])   // yyyy-mm-dd
-                    : new Date(+partes[2], +partes[1] - 1, +partes[0]);  // dd/mm/yyyy
-            }
-            if (fechaOferta && !isNaN(fechaOferta)) {
-                const diasPasados = (Date.now() - fechaOferta.getTime()) / (1000 * 60 * 60 * 24);
-                if (diasPasados > 7) {
-                    esOferta = false; // expirada: ya no aparece en Ofertas
-                }
-            }
-        }
-
+        const esOferta    = normalizar(descripcionRaw).includes('oferta') || normalizar(categoryRaw).includes('oferta');
         const category    = esOferta && !normalizar(categoryRaw).includes('oferta')
             ? normalizar(categoryRaw) + ' ofertas'
             : normalizar(categoryRaw);
         const imgUrl = extractUrlFromFormula(imageCell);
 
-        // Imágenes extra: cols[7]+ (excluyendo la columna fecha_oferta si existe)
+        // Imágenes extra: cols[7], cols[8], cols[9]...
         const extraUrls = [];
-        const imgCell6 = c(cols[6]); // col principal de imagen
-        for (const { val } of extraCols) {
-            const extra = extractUrlFromFormula(val);
+        for (let ci = 7; ci < cols.length; ci++) {
+            const extra = extractUrlFromFormula(c(cols[ci]));
             if (extra) extraUrls.push(normalizeDriveUrl(extra));
         }
 
@@ -378,8 +348,7 @@ async function fetchCsv(url) {
                 urls:     allUrls,
                 cantidad: parseInt(cantidad) || 0,
                 precio, descripcion,
-                esOferta,
-                fechaOferta: fechaOfertaRaw || null
+                esOferta
             });
         }
     }
@@ -388,11 +357,6 @@ async function fetchCsv(url) {
 
 // ===================== SINCRONIZACIÓN DE CARDS =====================
 function syncCards(newItems) {
-    // ── Evitar re-render si los datos no cambiaron ──
-    const newHash = JSON.stringify(newItems.map(i => i.id + i.precio + i.cantidad + i.esOferta));
-    if (newHash === syncCards._lastHash) return; // nada cambió, no tocar el DOM
-    syncCards._lastHash = newHash;
-
     allItems = newItems.slice(); // actualiza cache para autocomplete
 
     newItems.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
@@ -423,32 +387,11 @@ function syncCards(newItems) {
             img.src = item.url; img.loading = 'lazy'; img.alt = item.name;
             img.onerror = () => img.style.opacity = '0.3';
 
-            // Badge de oferta con días restantes
+            // Badge de oferta
             if (item.esOferta) {
                 const badge = document.createElement('div');
                 badge.className = 'oferta-badge';
-
-                let diasRestantesHTML = '';
-                if (item.fechaOferta) {
-                    const partes = item.fechaOferta.split(/[\/\-]/);
-                    let fechaInicio = null;
-                    if (partes.length === 3) {
-                        fechaInicio = partes[0].length === 4
-                            ? new Date(+partes[0], +partes[1]-1, +partes[2])
-                            : new Date(+partes[2], +partes[1]-1, +partes[0]);
-                    }
-                    if (fechaInicio && !isNaN(fechaInicio)) {
-                        const diasPasados = (Date.now() - fechaInicio.getTime()) / (1000*60*60*24);
-                        const restantes = Math.max(0, Math.ceil(7 - diasPasados));
-                        if (restantes <= 3 && restantes > 0) {
-                            diasRestantesHTML = `<span class="oferta-expira">⏳ ${restantes}d</span>`;
-                        } else if (restantes > 3) {
-                            diasRestantesHTML = `<span class="oferta-expira-ok">🏷️ ${restantes}d</span>`;
-                        }
-                    }
-                }
-
-                badge.innerHTML = `<svg viewBox="0 0 24 24" fill="white" width="16" height="16" style="flex-shrink:0"><path d="M21.41 11.58l-9-9A2 2 0 0 0 11 2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 .59 1.42l9 9A2 2 0 0 0 13 22a2 2 0 0 0 1.41-.59l7-7A2 2 0 0 0 22 13a2 2 0 0 0-.59-1.42zM6.5 8A1.5 1.5 0 1 1 8 6.5 1.5 1.5 0 0 1 6.5 8z"/></svg> Oferta${diasRestantesHTML}`;
+                badge.innerHTML = `<svg viewBox="0 0 24 24" fill="white" width="16" height="16" style="flex-shrink:0"><path d="M21.41 11.58l-9-9A2 2 0 0 0 11 2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 .59 1.42l9 9A2 2 0 0 0 13 22a2 2 0 0 0 1.41-.59l7-7A2 2 0 0 0 22 13a2 2 0 0 0-.59-1.42zM6.5 8A1.5 1.5 0 1 1 8 6.5 1.5 1.5 0 0 1 6.5 8z"/></svg> Oferta`;
                 card.appendChild(badge);
             }
 
@@ -586,6 +529,12 @@ function closeProductModal() {
 refreshCsv();
 setInterval(refreshCsv, UPDATE_INTERVAL);
 
+// ── Modo Admin: inyectar UI ───────────────────────────────
+if (IS_ADMIN) {
+    document.body.classList.add('admin-mode');
+    injectAdminUI();
+}
+
 if (searchInput) {
     // Mientras escribe: filtrar + autocomplete
     searchInput.addEventListener('input', () => {
@@ -614,4 +563,232 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         e.preventDefault();
         document.querySelector(href)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
+});
+
+// ═══════════════════════════════════════════════════════════
+//  MODO EDITOR — solo activo cuando ?admin=CLAVE está en URL
+// ═══════════════════════════════════════════════════════════
+
+function injectAdminUI() {
+    // ── Barra admin ──────────────────────────────────────
+    const bar = document.createElement('div');
+    bar.id = 'admin-bar';
+    bar.innerHTML = `
+        <span>🛠 <strong>Modo Editor</strong> <span class="admin-badge">ADMIN</span>
+        — Cambios guardados directo en Google Sheets</span>
+        <button class="admin-btn-add" onclick="adminOpenEditor(null)">＋ Nuevo producto</button>
+    `;
+    document.body.insertBefore(bar, document.body.firstChild);
+
+    // ── Modal editor ─────────────────────────────────────
+    const modal = document.createElement('div');
+    modal.id = 'admin-editor-modal';
+    modal.innerHTML = `
+        <div class="admin-editor-box">
+            <h3 id="admin-editor-title">Nuevo producto</h3>
+            <input type="hidden" id="af_item_id">
+            <div class="admin-form-grid">
+                <div>
+                    <label>ID único *</label>
+                    <input id="af_id" type="text" placeholder="ej: JAK-001">
+                </div>
+                <div>
+                    <label>Categoría *</label>
+                    <select id="af_cat">
+                        <option value="ropa">Ropa</option>
+                        <option value="accesorios">Accesorios</option>
+                        <option value="cuidado personal">Cuidado Personal</option>
+                        <option value="hogar">Hogar</option>
+                        <option value="maquillaje">Maquillaje</option>
+                        <option value="electronicos">Electrónicos</option>
+                        <option value="ofertas">Ofertas de la Semana</option>
+                    </select>
+                </div>
+                <div class="af-full">
+                    <label>Nombre del producto *</label>
+                    <input id="af_nombre" type="text" placeholder="Nombre visible en tienda">
+                </div>
+                <div>
+                    <label>Precio (USD) *</label>
+                    <input id="af_precio" type="number" step="0.01" min="0" placeholder="0.00">
+                </div>
+                <div>
+                    <label>Cantidad en stock</label>
+                    <input id="af_cantidad" type="number" min="0" placeholder="0">
+                </div>
+                <div class="af-full">
+                    <label>Descripción</label>
+                    <textarea id="af_desc" placeholder="Describe el producto..."></textarea>
+                </div>
+                <div class="af-full">
+                    <label>URL Imagen principal</label>
+                    <input id="af_img1" type="url" placeholder="https://...">
+                </div>
+                <div>
+                    <label>Imagen 2</label>
+                    <input id="af_img2" type="url" placeholder="https://...">
+                </div>
+                <div>
+                    <label>Imagen 3</label>
+                    <input id="af_img3" type="url" placeholder="https://...">
+                </div>
+                <div>
+                    <label>Imagen 4</label>
+                    <input id="af_img4" type="url" placeholder="https://...">
+                </div>
+                <div>
+                    <label>Imagen 5</label>
+                    <input id="af_img5" type="url" placeholder="https://...">
+                </div>
+            </div>
+            <div class="admin-form-actions">
+                <button class="admin-btn-cancel" onclick="adminCloseEditor()">Cancelar</button>
+                <button class="admin-btn-save" id="admin-btn-save" onclick="adminSave()">💾 Guardar</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    // ── Toast ────────────────────────────────────────────
+    const toast = document.createElement('div');
+    toast.id = 'admin-toast';
+    document.body.appendChild(toast);
+}
+
+// ── Botones ✏️ 🗑 sobre cada card ─────────────────────────
+function addAdminButtons(card, item) {
+    if (!IS_ADMIN) return;
+    // evitar duplicados
+    if (card.querySelector('.admin-card-actions')) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'admin-card-actions';
+    wrap.innerHTML = `
+        <button title="Editar" onclick="event.stopPropagation(); adminOpenEditor('${item.id}')">✏️</button>
+        <button title="Eliminar" onclick="event.stopPropagation(); adminDelete('${item.id}')">🗑</button>
+    `;
+    card.appendChild(wrap);
+}
+
+// Parchamos syncCards para que también agregue botones admin
+const _origSyncCards = syncCards;
+window.syncCards = function(newItems) {
+    _origSyncCards(newItems);
+    if (!IS_ADMIN) return;
+    newItems.forEach(item => {
+        const card = grid.querySelector(`.producto-card[data-id="${item.id}"]`);
+        if (card) addAdminButtons(card, item);
+    });
+};
+
+// ── Abrir / cerrar editor ────────────────────────────────
+function adminOpenEditor(id) {
+    const isNew = !id;
+    document.getElementById('admin-editor-title').textContent = isNew ? 'Nuevo producto' : 'Editar producto';
+    const btn = document.getElementById('admin-btn-save');
+    btn.disabled = false;
+    btn.textContent = '💾 Guardar';
+
+    if (isNew) {
+        ['af_item_id','af_id','af_nombre','af_precio','af_cantidad','af_desc',
+         'af_img1','af_img2','af_img3','af_img4','af_img5'].forEach(i => {
+            const el = document.getElementById(i);
+            if (el) el.value = '';
+        });
+        document.getElementById('af_cat').value = 'ropa';
+    } else {
+        const p = allItems.find(x => String(x.id) === String(id));
+        if (!p) return;
+        document.getElementById('af_item_id').value = p.id;
+        document.getElementById('af_id').value      = p.id;
+        document.getElementById('af_nombre').value  = p.name;
+        document.getElementById('af_cat').value     = p.category.replace(' ofertas','');
+        document.getElementById('af_precio').value  = p.precio.replace('$','');
+        document.getElementById('af_cantidad').value= p.cantidad;
+        document.getElementById('af_desc').value    = p.descripcion;
+        const imgs = p.urls || [];
+        ['af_img1','af_img2','af_img3','af_img4','af_img5'].forEach((fid, i) => {
+            document.getElementById(fid).value = imgs[i] || '';
+        });
+    }
+    document.getElementById('admin-editor-modal').classList.add('open');
+}
+
+function adminCloseEditor() {
+    document.getElementById('admin-editor-modal').classList.remove('open');
+}
+
+// ── Guardar (add / update) ───────────────────────────────
+async function adminSave() {
+    const oldId = document.getElementById('af_item_id').value.trim();
+    const newId = document.getElementById('af_id').value.trim();
+    const isNew = !oldId;
+
+    const product = {
+        item_id:                  isNew ? newId : oldId,
+        nombre:                   document.getElementById('af_nombre').value.trim(),
+        categoria:                document.getElementById('af_cat').value,
+        precio_unitario:          document.getElementById('af_precio').value,
+        cantidad:                 document.getElementById('af_cantidad').value,
+        descripcion_del_producto: document.getElementById('af_desc').value.trim(),
+        link_imagen:              document.getElementById('af_img1').value.trim(),
+        Imagen_2:                 document.getElementById('af_img2').value.trim(),
+        Imagen_3:                 document.getElementById('af_img3').value.trim(),
+        Imagen_4:                 document.getElementById('af_img4').value.trim(),
+        Imagen_5:                 document.getElementById('af_img5').value.trim(),
+    };
+
+    if (!product.item_id || !product.nombre || !product.precio_unitario) {
+        adminToast('⚠️ Completa ID, Nombre y Precio'); return;
+    }
+
+    const btn = document.getElementById('admin-btn-save');
+    btn.disabled = true; btn.textContent = 'Guardando...';
+
+    try {
+        const res  = await fetch(ADMIN_API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: isNew ? 'addProduct' : 'updateProduct', key: ADMIN_KEY, product })
+        });
+        const data = await res.json();
+        if (data.success) {
+            adminToast(isNew ? '✅ Producto agregado' : '✅ Producto actualizado');
+            adminCloseEditor();
+            await refreshCsv();
+        } else {
+            adminToast('❌ Error: ' + (data.error || 'desconocido'));
+        }
+    } catch (e) {
+        adminToast('❌ Error de conexión con Apps Script');
+    }
+    btn.disabled = false; btn.textContent = '💾 Guardar';
+}
+
+// ── Eliminar ─────────────────────────────────────────────
+async function adminDelete(id) {
+    const p = allItems.find(x => String(x.id) === String(id));
+    if (!confirm(`¿Eliminar "${p?.name}"? No se puede deshacer.`)) return;
+    try {
+        const res  = await fetch(`${ADMIN_API_URL}?action=deleteProduct&key=${ADMIN_KEY}&item_id=${encodeURIComponent(id)}`);
+        const data = await res.json();
+        if (data.success) { adminToast('🗑 Producto eliminado'); await refreshCsv(); }
+        else adminToast('❌ Error: ' + (data.error || 'desconocido'));
+    } catch (e) {
+        adminToast('❌ Error de conexión');
+    }
+}
+
+// ── Toast ────────────────────────────────────────────────
+function adminToast(msg) {
+    const t = document.getElementById('admin-toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Cerrar editor con Escape ─────────────────────────────
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        adminCloseEditor();
+    }
 });
