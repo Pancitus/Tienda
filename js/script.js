@@ -11,8 +11,8 @@ const ADMIN_KEY     = 'JAK2025admin'; // clave de URL (primer filtro)
 // Genera tus hashes en: https://emn178.github.io/online-tools/sha256.html
 // Usuario actual : jakadmin          → reemplaza el hash de abajo
 // Contraseña actual: JAK@Tienda2025! → reemplaza el hash de abajo
-const ADMIN_HASH_USER = '5b4d1e9a3c2f6b7d8e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2';
-const ADMIN_HASH_PASS = 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2';
+const ADMIN_HASH_USER = '586c5e35894aba95555008af0cbe41f18ccd3e587d8f19e42e79693c1b240826';
+const ADMIN_HASH_PASS = '586c5e35894aba95555008af0cbe41f18ccd3e587d8f19e42e79693c1b240826';
 
 // IS_ADMIN: arranca false; solo se pone true tras pasar el login
 let IS_ADMIN = false;
