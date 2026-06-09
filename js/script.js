@@ -824,7 +824,7 @@ function adminToast(msg) {
 }
 
 // ── Subir imagen a ImgBB ─────────────────────────────────
-const IMGBB_KEY = '634e5a5b7a6b4c9a8e1f2d3c4b5a6789'; // clave pública ImgBB
+const IMGBB_KEY = 'f5ff5037e7897af944fda369992b32d6'; // clave pública ImgBB
 
 async function adminUploadImg(input, targetId) {
     const file = input.files[0];
